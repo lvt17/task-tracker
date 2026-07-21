@@ -50,7 +50,63 @@ body{
 }
 .wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:28px 24px 80px;}
 
-/* ---------- LOADING INDICATORS ---------- */
+/* ---------- FUTURISTIC APP LOADER OVERLAY ---------- */
+.app-loader-overlay {
+  position: fixed; inset: 0; background: rgba(10, 17, 27, 0.92);
+  backdrop-filter: blur(12px); z-index: 99999; display: flex;
+  align-items: center; justify-content: center; flex-direction: column;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+.app-loader-overlay.hidden {
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.loader-content {
+  display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 360px;
+}
+.glow-ring {
+  position: relative; width: 68px; height: 68px; margin-bottom: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ring-inner {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 3px solid transparent; border-top-color: var(--amber); border-right-color: var(--emerald);
+  animation: spinRing 1s infinite linear;
+}
+.pulse-dot {
+  width: 16px; height: 16px; border-radius: 50%; background: var(--amber);
+  box-shadow: 0 0 18px var(--amber); animation: pulseDot 1.2s infinite ease-in-out;
+}
+@keyframes spinRing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes pulseDot {
+  0%, 100% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+.loader-title {
+  font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700;
+  letter-spacing: .14em; color: var(--text-hi); text-transform: uppercase; margin-bottom: 6px;
+}
+.loader-sub {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mid); margin-bottom: 18px;
+}
+.loader-bar-track {
+  width: 220px; height: 4px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden; position: relative;
+}
+.loader-bar-fill {
+  position: absolute; top:0; bottom:0; left: -50%; width: 50%;
+  background: linear-gradient(90deg, var(--amber), var(--emerald));
+  border-radius: 4px; animation: loaderBarAnim 1.4s infinite ease-in-out;
+}
+@keyframes loaderBarAnim {
+  0% { left: -50%; width: 30%; }
+  50% { left: 30%; width: 60%; }
+  100% { left: 100%; width: 30%; }
+}
+
+/* ---------- TOP GLOWING LOADING BAR ---------- */
 .loading-bar {
   position: fixed; top: 0; left: 0; right: 0; height: 3px;
   background: linear-gradient(90deg, var(--amber), var(--emerald), var(--blue));
@@ -414,6 +470,22 @@ body{
 </style>
 </head>
 <body>
+
+<!-- High-End Futuristic Loader Overlay -->
+<div id="appLoaderOverlay" class="app-loader-overlay">
+  <div class="loader-content">
+    <div class="glow-ring">
+      <div class="ring-inner"></div>
+      <div class="pulse-dot"></div>
+    </div>
+    <div class="loader-title">CONNECTING TO GOOGLE SHEET</div>
+    <div class="loader-sub" id="loaderSubText">Synchronizing live delivery features…</div>
+    <div class="loader-bar-track">
+      <div class="loader-bar-fill"></div>
+    </div>
+  </div>
+</div>
+
 <div id="loadingBar" class="loading-bar" style="display:none;"></div>
 <div class="grid-overlay"></div>
 <div class="wrap">
@@ -621,11 +693,16 @@ function showLoading(show) {
   if (badge) badge.style.display = show ? 'inline-flex' : 'none';
 }
 
+function hideAppLoader() {
+  const loader = document.getElementById('appLoaderOverlay');
+  if (loader) loader.classList.add('hidden');
+}
+
 function renderSkeletons() {
   const container = document.getElementById('sections');
   if (!container) return;
   let html = '<div class="skeleton-container">';
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     html += `
       <div class="skeleton-card">
         <div class="skeleton-line" style="width:50px; height:14px;"></div>
@@ -639,6 +716,16 @@ function renderSkeletons() {
   }
   html += '</div>';
   container.innerHTML = html;
+
+  // Populate Signal Strip Skeleton LEDs
+  const strip = document.getElementById('strip');
+  if (strip && state.tasks.length === 0) {
+    let stripHtml = '';
+    for(let i=0; i<12; i++) {
+      stripHtml += `<div class="led skeleton-line" style="width:26px; height:26px; border-radius:5px;"></div>`;
+    }
+    strip.innerHTML = stripHtml;
+  }
 }
 
 // Fetch Data directly from Apps Script Web App (doGet) or Google Sheet GViz API
@@ -686,6 +773,7 @@ async function fetchWorksheetData() {
     }
   } finally {
     showLoading(false);
+    hideAppLoader();
   }
 
   return null;
@@ -815,6 +903,7 @@ function getNextTaskId() {
 }
 
 async function loadState(){
+  renderSkeletons();
   const savedState = getItem(STORE_KEY);
   if (savedState) {
     try {

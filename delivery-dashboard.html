@@ -752,15 +752,21 @@ function updateClientFilterOptions() {
   const currentVal = select.value;
   const clients = new Set();
   state.tasks.forEach(t => {
-    if (t.client && t.client !== '—') clients.add(t.client);
+    if (t.client && t.client !== '—') clients.add(t.client.trim());
   });
   
+  // Natural sorting: Q2, Q3, Q4... Q11, Q12...
+  const sortedClients = Array.from(clients).sort((a, b) => 
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  );
+
   let html = '<option value="all">Client: All</option>';
-  Array.from(clients).sort().forEach(c => {
-    html += `<option value="${escapeAttr(c)}">${escapeAttr(c)}</option>`;
+  sortedClients.forEach(c => {
+    const label = c.startsWith('Q') || c.startsWith('#') ? c : '#' + c;
+    html += `<option value="${escapeAttr(c)}">Client: ${escapeAttr(label)}</option>`;
   });
   select.innerHTML = html;
-  if (Array.from(clients).includes(currentVal)) {
+  if (sortedClients.includes(currentVal)) {
     select.value = currentVal;
   } else {
     select.value = 'all';

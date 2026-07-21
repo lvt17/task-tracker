@@ -743,13 +743,13 @@ if (window.XMLHttpRequest) {
 }
 
 // =========================================================================
-// GOOGLE WORKSHEET CONFIGURATION
+// GOOGLE WORKSHEET CONFIGURATION & SYNC SYSTEM
 // =========================================================================
 const SPREADSHEET_ID = ''; 
 const SHEET_TAB_NAME = 'Task Tracker';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTXLt_BKakSvy5494ZFVpax9ebXTR5s23PuUFuHjHZ3Ina_jSw-ayque4k_9t03-sJ/exec';
 
-const PAGE_SIZE = 6; // Initial number of items visible per section before "View More"
+const PAGE_SIZE = 6;
 
 const STATUS_ORDER = ['pending','inprogress','devdone','done'];
 const STATUS_LABEL = {pending:'Pending', inprogress:'In Progress', devdone:'Dev-Done', done:'Done'};
@@ -768,15 +768,52 @@ let activeSortOrder = 'id-asc';
 
 let collapsedSections = {};
 let visibleLimits = { pending: PAGE_SIZE, inprogress: PAGE_SIZE, devdone: PAGE_SIZE, done: PAGE_SIZE };
-let newlyAddedId = null; // Highlight newly inserted task card
+let newlyAddedId = null;
 
 const STORE_KEY = 'delivery-board-state';
+const DELETED_KEY = 'delivery-board-deleted-ids';
+const MODIFIED_KEY = 'delivery-board-modified-tasks';
 
+// ---------- PERSISTENCE & DELETION TRACKING ----------
 function getItem(key) {
   try { return localStorage.getItem(key); } catch(e){ return null; }
 }
 function setItem(key, val) {
   try { localStorage.setItem(key, val); } catch(e){}
+}
+
+function getDeletedTaskIds() {
+  try {
+    const raw = localStorage.getItem(DELETED_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function addDeletedTaskId(id) {
+  const ids = getDeletedTaskIds();
+  if (!ids.includes(id)) {
+    ids.push(id);
+    try { localStorage.setItem(DELETED_KEY, JSON.stringify(ids)); } catch(e){}
+  }
+}
+
+function getModifiedTasks() {
+  try {
+    const raw = localStorage.getItem(MODIFIED_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function setModifiedTask(task) {
+  const mods = getModifiedTasks();
+  mods[task.id] = task;
+  try { localStorage.setItem(MODIFIED_KEY, JSON.stringify(mods)); } catch(e){}
+}
+
+function removeModifiedTask(id) {
+  const mods = getModifiedTasks();
+  delete mods[id];
+  try { localStorage.setItem(MODIFIED_KEY, JSON.stringify(mods)); } catch(e){}
 }
 
 function getActiveSheetId() {
@@ -820,7 +857,6 @@ function renderSkeletons() {
   html += '</div>';
   container.innerHTML = html;
 
-  // Populate Signal Strip Skeleton LEDs
   const strip = document.getElementById('strip');
   if (strip && state.tasks.length === 0) {
     let stripHtml = '';
@@ -958,21 +994,45 @@ function parse2DArrayTasks(rows) {
     });
   }
 
-  return parsedTasks;
+  // 1. FILTER OUT DELETED TASK IDs (Ensures deleted tasks NEVER reappear on refresh)
+  const deletedIds = getDeletedTaskIds();
+  let cleanTasks = parsedTasks.filter(t => !deletedIds.includes(t.id));
+
+  // 2. APPLY LOCAL MODIFICATIONS OVER LIVE DATA
+  const modifiedMap = getModifiedTasks();
+  cleanTasks = cleanTasks.map(t => modifiedMap[t.id] ? { ...t, ...modifiedMap[t.id] } : t);
+
+  return cleanTasks;
 }
 
-// Append New Task directly to Google Sheet via Apps Script Web App Endpoint (doPost)
-async function appendTaskToSheet(task) {
+// Sync Add / Edit / Delete directly to Google Sheet via Apps Script Endpoint
+async function syncToSheet(payload) {
   const scriptUrl = getActiveScriptUrl();
   if (!scriptUrl) return;
 
   showLoading(true);
+  try {
+    await _secureFetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Failed to sync action to Google Sheet:", err);
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function appendTaskToSheet(task) {
   const titleDesc = task.title + (task.desc ? ': ' + task.desc : '');
   const complexityLabel = (task.complexity || 'medium').charAt(0).toUpperCase() + (task.complexity || 'medium').slice(1);
   const statusMap = { done:'Done', devdone:'Dev-Done', inprogress:'In-Progress', pending:'Pending' };
   const statusLabel = statusMap[task.status] || 'Pending';
 
-  const payload = {
+  await syncToSheet({
+    action: 'add',
     row: [
       task.id,
       task.client || '—',
@@ -988,21 +1048,33 @@ async function appendTaskToSheet(task) {
     complexity: complexityLabel,
     deps: task.deps || 'None',
     status: statusLabel
-  };
+  });
+}
 
-  try {
-    await _secureFetch(scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    console.log("New task appended to Google Sheet:", task.id);
-  } catch (err) {
-    console.error("Failed to append task to Google Sheet:", err);
-  } finally {
-    showLoading(false);
-  }
+async function syncDeleteToSheet(taskId) {
+  await syncToSheet({
+    action: 'delete',
+    id: taskId
+  });
+}
+
+async function syncUpdateToSheet(task) {
+  const titleDesc = task.title + (task.desc ? ': ' + task.desc : '');
+  const complexityLabel = (task.complexity || 'medium').charAt(0).toUpperCase() + (task.complexity || 'medium').slice(1);
+  const statusMap = { done:'Done', devdone:'Dev-Done', inprogress:'In-Progress', pending:'Pending' };
+  const statusLabel = statusMap[task.status] || 'Pending';
+
+  await syncToSheet({
+    action: 'update',
+    id: task.id,
+    client: task.client || '—',
+    title: task.title,
+    desc: task.desc,
+    titleDesc: titleDesc,
+    complexity: complexityLabel,
+    deps: task.deps || 'None',
+    status: statusLabel
+  });
 }
 
 function getNextTaskId() {
@@ -1029,8 +1101,9 @@ async function loadState(){
       try {
         const parsed = JSON.parse(savedState);
         if (parsed && Array.isArray(parsed.tasks)) {
-          // Filter out dummy placeholders from saved state as well
+          const deletedIds = getDeletedTaskIds();
           state.tasks = parsed.tasks.filter(t => {
+            if (deletedIds.includes(t.id)) return false;
             const raw = ((t.title || '') + (t.desc || '')).toLowerCase();
             return !raw.includes('click to edit') && !raw.includes('test (dashboard building)');
           });
@@ -1069,7 +1142,6 @@ function updateClientFilterOptions() {
     if (t.client && t.client !== '—') clients.add(t.client.trim());
   });
   
-  // Natural sorting: Q2, Q3, Q4... Q11, Q12...
   const sortedClients = Array.from(clients).sort((a, b) => 
     a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
   );
@@ -1128,16 +1200,10 @@ function render(){
 }
 
 function matchesFilter(t){
-  // Status Filter Check
   if(activeStatusFilter !== 'all' && t.status !== activeStatusFilter) return false;
-  
-  // Complexity Filter Check
   if(activeComplexityFilter !== 'all' && (t.complexity || 'medium').toLowerCase() !== activeComplexityFilter) return false;
-
-  // Client Filter Check
   if(activeClientFilter !== 'all' && (t.client || '—').trim() !== activeClientFilter) return false;
 
-  // Text Search Check
   const q = document.getElementById('search').value.trim().toLowerCase();
   if(q && !(
     (t.title || '').toLowerCase().includes(q) ||
@@ -1167,7 +1233,6 @@ function sortTasks(tasksList) {
       if (tA !== tB) return tA.localeCompare(tB);
     }
     
-    // Default ID order: TASK-01, TASK-02...
     const nA = parseInt((a.id || '').replace(/\D/g, ''), 10) || 0;
     const nB = parseInt((b.id || '').replace(/\D/g, ''), 10) || 0;
     return nA - nB;
@@ -1210,7 +1275,6 @@ function renderSections(){
       cards.appendChild(buildCard(t));
     });
 
-    // View More Pagination Button
     if (items.length > limit) {
       const remaining = items.length - limit;
       const viewMoreBtn = document.createElement('button');
@@ -1268,29 +1332,50 @@ function buildCard(t){
     <button class="c-del" title="Remove feature">✕</button>
   `;
 
-  // HIGH-PERFORMANCE NO-LAG INPUT LISTENERS (Targeted updates without full page re-render)
+  // REAL-TIME EDIT LISTENERS (Saves modification & syncs)
   card.querySelector('.title').addEventListener('input', e=>{
     t.title = e.target.value;
+    setModifiedTask(t);
     saveState();
+    syncUpdateToSheet(t);
     const led = document.querySelector(`.led[data-id="${t.id}"]`);
     if (led) led.title = `${t.id} — ${t.title} (${STATUS_LABEL[t.status]})`;
   });
-  card.querySelector('.desc').addEventListener('input', e=>{ t.desc = e.target.value; saveState(); });
-  card.querySelector('.c-dep input').addEventListener('input', e=>{ t.deps = e.target.value; saveState(); });
+  card.querySelector('.desc').addEventListener('input', e=>{
+    t.desc = e.target.value;
+    setModifiedTask(t);
+    saveState();
+    syncUpdateToSheet(t);
+  });
+  card.querySelector('.c-dep input').addEventListener('input', e=>{
+    t.deps = e.target.value;
+    setModifiedTask(t);
+    saveState();
+    syncUpdateToSheet(t);
+  });
   card.querySelector('.pill').addEventListener('change', e=>{
     t.complexity = e.target.value;
     e.target.className = 'pill ' + t.complexity;
+    setModifiedTask(t);
     saveState();
+    syncUpdateToSheet(t);
   });
   card.querySelector('.status-pill').addEventListener('change', e=>{
     t.status = e.target.value;
+    setModifiedTask(t);
     render();
+    syncUpdateToSheet(t);
   });
+
+  // REAL-TIME DELETE LISTENER (Removes permanently and syncs deletion)
   card.querySelector('.c-del').addEventListener('click', ()=>{
     if(confirm('Remove ' + t.id + ' — ' + t.title + '?')){
+      addDeletedTaskId(t.id); // Remember permanent deletion
+      removeModifiedTask(t.id);
       state.tasks = state.tasks.filter(x=>x!==t);
       updateClientFilterOptions();
       render();
+      syncDeleteToSheet(t.id); // Send delete action to Sheet
     }
   });
 
@@ -1337,7 +1422,7 @@ document.getElementById('search').addEventListener('input', ()=>{
   searchDebounceTimer = setTimeout(renderSections, 150);
 });
 
-// Modal Add Feature Handlers (Fast Hardware-Accelerated Modal)
+// Modal Add Feature Handlers
 const addFeatureModal = document.getElementById('addFeatureModal');
 const addTitle = document.getElementById('addTitle');
 const addDesc = document.getElementById('addDesc');

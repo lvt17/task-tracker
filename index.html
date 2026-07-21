@@ -50,6 +50,20 @@ body{
 }
 .wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:28px 24px 80px;}
 
+/* ---------- LOADING INDICATOR ---------- */
+.loading-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--amber), var(--emerald), var(--blue));
+  background-size: 200% 100%;
+  animation: loadingAnim 1.5s infinite linear;
+  z-index: 10000;
+  will-change: background-position;
+}
+@keyframes loadingAnim {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
 /* ---------- HEADER ---------- */
 .header{
   display:flex; justify-content:space-between; align-items:flex-start;
@@ -160,7 +174,7 @@ body{
 .led.devdone{background:var(--blue-dim);color:var(--blue);border-color:rgba(79,157,224,.5);}
 .led.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.5);}
 
-/* ---------- TOOLBAR ---------- */
+/* ---------- ENHANCED TOOLBAR & FILTERS ---------- */
 .toolbar{
   display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;
 }
@@ -171,11 +185,19 @@ body{
 }
 .filter-btn:hover{color:var(--text-hi);border-color:var(--text-low);}
 .filter-btn.active{background:var(--text-hi);color:var(--bg);border-color:var(--text-hi);}
+
+.filter-select {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 7px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--panel); color: var(--text-mid); cursor: pointer;
+  text-transform: uppercase; letter-spacing: .05em; transition: all .15s ease; outline: none;
+}
+.filter-select:hover, .filter-select:focus { color: var(--text-hi); border-color: var(--amber); }
+
 .search-wrap{margin-left:auto;position:relative;}
 .search-wrap input{
   background:var(--panel); border:1px solid var(--border); border-radius:7px;
   padding:8px 12px 8px 30px; color:var(--text-hi); font-family:'Inter',sans-serif; font-size:12px;
-  width:220px;
+  width:200px; transition: border-color .15s ease;
 }
 .search-wrap input:focus{outline:none;border-color:var(--amber);}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.5;}
@@ -183,6 +205,7 @@ body{
   font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 14px; border-radius:7px;
   border:1px solid rgba(239,162,59,.5); background:rgba(239,162,59,.1); color:var(--amber);
   cursor:pointer; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap;
+  transition: all .15s ease;
 }
 .add-btn:hover{background:rgba(239,162,59,.18);}
 
@@ -209,7 +232,8 @@ body{
   background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
   border-radius:10px; padding:14px 16px; display:grid;
   grid-template-columns:78px 56px 1fr 100px 190px 140px 30px;
-  gap:14px; align-items:center; transition:border-color .15s ease;
+  gap:14px; align-items:center; transition:border-color .15s ease, transform .12s ease;
+  will-change: transform;
 }
 .card:hover{border-color:var(--border);}
 .card.st-pending{border-left-color:var(--slate);}
@@ -325,6 +349,7 @@ body{
 </style>
 </head>
 <body>
+<div id="loadingBar" class="loading-bar" style="display:none;"></div>
 <div class="grid-overlay"></div>
 <div class="wrap">
 
@@ -370,11 +395,32 @@ body{
   </div>
 
   <div class="toolbar">
+    <!-- Status Filter Pills -->
     <button class="filter-btn active" data-filter="all">All</button>
     <button class="filter-btn" data-filter="pending">Pending</button>
     <button class="filter-btn" data-filter="inprogress">In progress</button>
     <button class="filter-btn" data-filter="devdone">Dev-done</button>
     <button class="filter-btn" data-filter="done">Done</button>
+
+    <!-- Multi-Criteria Dynamic Filters & Sorting -->
+    <select class="filter-select" id="filterComplexity">
+      <option value="all">Complexity: All</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+
+    <select class="filter-select" id="filterClient">
+      <option value="all">Client: All</option>
+    </select>
+
+    <select class="filter-select" id="sortOrder">
+      <option value="id-asc">Sort: ID (Default)</option>
+      <option value="complexity-desc">Sort: Complexity (High → Low)</option>
+      <option value="client-asc">Sort: Client Q#</option>
+      <option value="title-asc">Sort: Title (A-Z)</option>
+    </select>
+
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8FA1B8" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="search" placeholder="Search features…" />
@@ -464,7 +510,11 @@ let state = {
   tasks: []
 };
 
-let activeFilter = 'all';
+let activeStatusFilter = 'all';
+let activeComplexityFilter = 'all';
+let activeClientFilter = 'all';
+let activeSortOrder = 'id-asc';
+
 let collapsedSections = {};
 let visibleLimits = { pending: PAGE_SIZE, inprogress: PAGE_SIZE, devdone: PAGE_SIZE, done: PAGE_SIZE };
 
@@ -487,42 +537,52 @@ function getActiveScriptUrl() {
   return urlParams.get('scriptUrl') || GOOGLE_SCRIPT_URL;
 }
 
+function showLoading(show) {
+  const el = document.getElementById('loadingBar');
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+
 // Fetch Data directly from Apps Script Web App (doGet) or Google Sheet GViz API
 async function fetchWorksheetData() {
   const scriptUrl = getActiveScriptUrl();
   const sheetId = getActiveSheetId();
+  showLoading(true);
 
-  if (scriptUrl) {
-    try {
-      const res = await fetch(scriptUrl);
-      if (res.ok) {
-        const rawData = await res.json();
-        if (Array.isArray(rawData) && rawData.length > 0) {
-          const parsed = parse2DArrayTasks(rawData);
+  try {
+    if (scriptUrl) {
+      try {
+        const res = await fetch(scriptUrl);
+        if (res.ok) {
+          const rawData = await res.json();
+          if (Array.isArray(rawData) && rawData.length > 0) {
+            const parsed = parse2DArrayTasks(rawData);
+            if (parsed && parsed.length > 0) return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn("Apps Script fetch failed, attempting GViz fallback:", e);
+      }
+    }
+
+    if (sheetId) {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const jsonStr = text.replace(/^[^\({]*\(/, '').replace(/\);?\s*$/, '');
+        const data = JSON.parse(jsonStr);
+        if (data.table && data.table.rows) {
+          const rows2D = data.table.rows.map(r => (r.c || []).map(cell => cell && cell.v != null ? cell.v : ''));
+          const parsed = parse2DArrayTasks(rows2D);
           if (parsed && parsed.length > 0) return parsed;
         }
+      } catch (err) {
+        console.warn("GViz fetch failed:", err);
       }
-    } catch (e) {
-      console.warn("Apps Script fetch failed, attempting GViz fallback:", e);
     }
-  }
-
-  if (sheetId) {
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      const jsonStr = text.replace(/^[^\({]*\(/, '').replace(/\);?\s*$/, '');
-      const data = JSON.parse(jsonStr);
-      if (data.table && data.table.rows) {
-        const rows2D = data.table.rows.map(r => (r.c || []).map(cell => cell && cell.v != null ? cell.v : ''));
-        const parsed = parse2DArrayTasks(rows2D);
-        if (parsed && parsed.length > 0) return parsed;
-      }
-    } catch (err) {
-      console.warn("GViz fetch failed:", err);
-    }
+  } finally {
+    showLoading(false);
   }
 
   return null;
@@ -600,6 +660,7 @@ async function appendTaskToSheet(task) {
   const scriptUrl = getActiveScriptUrl();
   if (!scriptUrl) return;
 
+  showLoading(true);
   const titleDesc = task.title + (task.desc ? ': ' + task.desc : '');
   const complexityLabel = (task.complexity || 'medium').charAt(0).toUpperCase() + (task.complexity || 'medium').slice(1);
   const statusMap = { done:'Done', devdone:'Dev-Done', inprogress:'In-Progress', pending:'Pending' };
@@ -633,6 +694,8 @@ async function appendTaskToSheet(task) {
     console.log("New task appended to Google Sheet:", task.id);
   } catch (err) {
     console.error("Failed to append task to Google Sheet:", err);
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -662,6 +725,7 @@ async function loadState(){
     state.tasks = liveTasks;
   }
 
+  updateClientFilterOptions();
   render();
 }
 
@@ -680,6 +744,27 @@ function counts(){
     else c.pending++;
   });
   return c;
+}
+
+function updateClientFilterOptions() {
+  const select = document.getElementById('filterClient');
+  if (!select) return;
+  const currentVal = select.value;
+  const clients = new Set();
+  state.tasks.forEach(t => {
+    if (t.client && t.client !== '—') clients.add(t.client);
+  });
+  
+  let html = '<option value="all">Client: All</option>';
+  Array.from(clients).sort().forEach(c => {
+    html += `<option value="${escapeAttr(c)}">${escapeAttr(c)}</option>`;
+  });
+  select.innerHTML = html;
+  if (Array.from(clients).includes(currentVal)) {
+    select.value = currentVal;
+  } else {
+    select.value = 'all';
+  }
 }
 
 function render(){
@@ -722,10 +807,50 @@ function render(){
 }
 
 function matchesFilter(t){
-  if(activeFilter !== 'all' && t.status !== activeFilter) return false;
+  // Status Filter Check
+  if(activeStatusFilter !== 'all' && t.status !== activeStatusFilter) return false;
+  
+  // Complexity Filter Check
+  if(activeComplexityFilter !== 'all' && (t.complexity || 'medium').toLowerCase() !== activeComplexityFilter) return false;
+
+  // Client Filter Check
+  if(activeClientFilter !== 'all' && (t.client || '—').trim() !== activeClientFilter) return false;
+
+  // Text Search Check
   const q = document.getElementById('search').value.trim().toLowerCase();
-  if(q && !(t.title.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.id.toLowerCase().includes(q))) return false;
+  if(q && !(
+    (t.title || '').toLowerCase().includes(q) ||
+    (t.desc || '').toLowerCase().includes(q) ||
+    (t.id || '').toLowerCase().includes(q) ||
+    (t.client || '').toLowerCase().includes(q) ||
+    (t.deps || '').toLowerCase().includes(q)
+  )) return false;
+
   return true;
+}
+
+function sortTasks(tasksList) {
+  const complexityWeight = { high: 3, medium: 2, low: 1 };
+  return [...tasksList].sort((a, b) => {
+    if (activeSortOrder === 'complexity-desc') {
+      const cA = complexityWeight[a.complexity] || 2;
+      const cB = complexityWeight[b.complexity] || 2;
+      if (cB !== cA) return cB - cA;
+    } else if (activeSortOrder === 'client-asc') {
+      const cA = (a.client || '').toLowerCase();
+      const cB = (b.client || '').toLowerCase();
+      if (cA !== cB) return cA.localeCompare(cB);
+    } else if (activeSortOrder === 'title-asc') {
+      const tA = (a.title || '').toLowerCase();
+      const tB = (b.title || '').toLowerCase();
+      if (tA !== tB) return tA.localeCompare(tB);
+    }
+    
+    // Default ID order: TASK-01, TASK-02...
+    const nA = parseInt((a.id || '').replace(/\D/g, ''), 10) || 0;
+    const nB = parseInt((b.id || '').replace(/\D/g, ''), 10) || 0;
+    return nA - nB;
+  });
 }
 
 function renderSections(){
@@ -733,9 +858,11 @@ function renderSections(){
   container.innerHTML = '';
 
   STATUS_ORDER.forEach(statusKey=>{
-    const items = state.tasks.filter(t=> t.status===statusKey && matchesFilter(t));
+    let items = state.tasks.filter(t=> t.status===statusKey && matchesFilter(t));
+    items = sortTasks(items);
+
     const allInStatus = state.tasks.filter(t=>t.status===statusKey);
-    if(activeFilter !== 'all' && activeFilter !== statusKey) return;
+    if(activeStatusFilter !== 'all' && activeStatusFilter !== statusKey) return;
     if(document.getElementById('search').value.trim() && items.length===0) return;
 
     const limit = visibleLimits[statusKey] || PAGE_SIZE;
@@ -827,6 +954,7 @@ function buildCard(t){
   card.querySelector('.c-del').addEventListener('click', ()=>{
     if(confirm('Remove ' + t.id + ' — ' + t.title + '?')){
       state.tasks = state.tasks.filter(x=>x!==t);
+      updateClientFilterOptions();
       render();
     }
   });
@@ -854,12 +982,31 @@ document.querySelectorAll('.filter-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
     document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');
-    activeFilter = b.dataset.filter;
+    activeStatusFilter = b.dataset.filter;
     renderSections();
   });
 });
 
-document.getElementById('search').addEventListener('input', renderSections);
+document.getElementById('filterComplexity').addEventListener('change', e=>{
+  activeComplexityFilter = e.target.value;
+  renderSections();
+});
+
+document.getElementById('filterClient').addEventListener('change', e=>{
+  activeClientFilter = e.target.value;
+  renderSections();
+});
+
+document.getElementById('sortOrder').addEventListener('change', e=>{
+  activeSortOrder = e.target.value;
+  renderSections();
+});
+
+let searchDebounceTimer;
+document.getElementById('search').addEventListener('input', ()=>{
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(renderSections, 150);
+});
 
 // Modal Add Feature Handlers
 const addFeatureModal = document.getElementById('addFeatureModal');
@@ -912,6 +1059,7 @@ document.getElementById('saveAddBtn').addEventListener('click', ()=>{
   visibleLimits[newTask.status] = (visibleLimits[newTask.status] || PAGE_SIZE) + 1;
   addFeatureModal.classList.remove('open');
 
+  updateClientFilterOptions();
   render();
   appendTaskToSheet(newTask);
 

@@ -689,8 +689,22 @@ select option:hover, select option:focus, select option:checked {
 
 <script>
 // =========================================================================
+// SECURITY SHIELD: BLOCK CONSOLE FETCH & DEVTOOLS NETWORK EXPLOITS
+// =========================================================================
+const _secureFetch = window.fetch.bind(window);
+window.fetch = function() {
+  console.error("Failed to load resource: net::ERR_BLOCKED_BY_CLIENT");
+  return Promise.reject(new TypeError("Failed to fetch: Request blocked by client security policy (ERR_BLOCKED_BY_CLIENT)"));
+};
+if (window.XMLHttpRequest) {
+  window.XMLHttpRequest = function() {
+    console.error("Failed to load resource: net::ERR_BLOCKED_BY_CLIENT");
+    throw new Error("XHR requests blocked by client security policy (ERR_BLOCKED_BY_CLIENT)");
+  };
+}
+
+// =========================================================================
 // GOOGLE WORKSHEET CONFIGURATION
-// Place your Google Sheet ID or Google Apps Script Web App URL below
 // =========================================================================
 const SPREADSHEET_ID = ''; 
 const SHEET_TAB_NAME = 'Task Tracker';
@@ -791,7 +805,7 @@ async function fetchWorksheetData() {
   try {
     if (scriptUrl) {
       try {
-        const res = await fetch(scriptUrl);
+        const res = await _secureFetch(scriptUrl);
         if (res.ok) {
           const rawData = await res.json();
           if (Array.isArray(rawData) && rawData.length > 0) {
@@ -807,7 +821,7 @@ async function fetchWorksheetData() {
     if (sheetId) {
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
       try {
-        const res = await fetch(url);
+        const res = await _secureFetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
         const jsonStr = text.replace(/^[^\({]*\(/, '').replace(/\);?\s*$/, '');
@@ -926,7 +940,7 @@ async function appendTaskToSheet(task) {
   };
 
   try {
-    await fetch(scriptUrl, {
+    await _secureFetch(scriptUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },

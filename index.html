@@ -336,14 +336,26 @@ body{
   background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
   border-radius:10px; padding:14px 16px; display:grid;
   grid-template-columns:78px 56px 1fr 100px 190px 140px 30px;
-  gap:14px; align-items:center; transition:border-color .15s ease, transform .12s ease;
-  will-change: transform;
+  gap:14px; align-items:center; transition:all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
 }
 .card:hover{border-color:var(--border);}
 .card.st-pending{border-left-color:var(--slate);}
 .card.st-inprogress{border-left-color:var(--amber);}
 .card.st-devdone{border-left-color:var(--blue);}
 .card.st-done{border-left-color:var(--emerald);}
+
+/* Card New Entry High-End Motion & Glow Animation */
+.card-new-entry {
+  animation: cardInsert 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 0 24px rgba(239, 162, 59, 0.4);
+  border-color: var(--amber) !important;
+}
+@keyframes cardInsert {
+  0% { opacity: 0; transform: translateY(-20px) scale(0.96); }
+  60% { opacity: 1; transform: translateY(3px) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .c-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mid);font-weight:600;}
 .c-client{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-low);}
@@ -419,29 +431,36 @@ body{
 }
 .footer-note span{color:var(--amber);}
 
-/* ---------- MODAL DIALOG ---------- */
+/* ---------- MODAL DIALOG & SMOOTH ANIMATIONS ---------- */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(10, 17, 27, 0.85); backdrop-filter: blur(6px);
+  position: fixed; inset: 0; background: rgba(10, 17, 27, 0.85); backdrop-filter: blur(8px);
   z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0;
-  pointer-events: none; transition: opacity 0.2s ease;
+  pointer-events: none; transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
 .modal-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-  width: 90%; max-width: 520px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  width: 90%; max-width: 520px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  transform: translateY(24px) scale(0.95); opacity: 0;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
+.modal-overlay.open .modal-card {
+  transform: translateY(0) scale(1); opacity: 1;
+}
+
 .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .modal-head h3 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; margin: 0; color: var(--text-hi); }
-.modal-close { background: none; border: none; color: var(--text-mid); font-size: 20px; cursor: pointer; }
+.modal-close { background: none; border: none; color: var(--text-mid); font-size: 20px; cursor: pointer; transition: color 0.15s ease; }
 .modal-close:hover { color: var(--rose); }
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mid); text-transform: uppercase; margin-bottom: 6px; }
-.form-group input, .form-group select { width: 100%; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-hi); font-family: 'Inter', sans-serif; font-size: 13px; }
+.form-group input, .form-group select { width: 100%; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-hi); font-family: 'Inter', sans-serif; font-size: 13px; transition: border-color 0.15s ease; }
 .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--amber); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
-.btn-primary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: var(--amber); color: var(--bg); border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; }
-.btn-primary:hover { background: #f5b352; }
-.btn-secondary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: transparent; color: var(--text-mid); border: 1px solid var(--border); cursor: pointer; text-transform: uppercase; }
+.btn-primary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: var(--amber); color: var(--bg); border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: all 0.15s ease; }
+.btn-primary:hover { background: #f5b352; transform: translateY(-1px); }
+.btn-secondary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: transparent; color: var(--text-mid); border: 1px solid var(--border); cursor: pointer; text-transform: uppercase; transition: all 0.15s ease; }
 .btn-secondary:hover { color: var(--text-hi); border-color: var(--text-low); }
 
 /* ---------- RESPONSIVE DESIGN ---------- */
@@ -666,6 +685,7 @@ let activeSortOrder = 'id-asc';
 
 let collapsedSections = {};
 let visibleLimits = { pending: PAGE_SIZE, inprogress: PAGE_SIZE, devdone: PAGE_SIZE, done: PAGE_SIZE };
+let newlyAddedId = null; // Highlight newly inserted task card
 
 const STORE_KEY = 'delivery-board-state';
 
@@ -1111,6 +1131,14 @@ function buildCard(t){
   card.className = 'card st-' + t.status;
   card.id = 'row-' + t.id;
 
+  if (t.id === newlyAddedId) {
+    card.classList.add('card-new-entry');
+    setTimeout(() => {
+      card.classList.remove('card-new-entry');
+      if (newlyAddedId === t.id) newlyAddedId = null;
+    }, 2200);
+  }
+
   const displayClient = (t.client && t.client !== '—') 
     ? (t.client.startsWith('Q') || t.client.startsWith('#') ? escapeAttr(t.client) : '#' + escapeAttr(t.client)) 
     : '—';
@@ -1253,6 +1281,7 @@ document.getElementById('saveAddBtn').addEventListener('click', ()=>{
     status: addStatus.value
   };
 
+  newlyAddedId = newTask.id;
   state.tasks.push(newTask);
   visibleLimits[newTask.status] = (visibleLimits[newTask.status] || PAGE_SIZE) + 1;
   addFeatureModal.classList.remove('open');
@@ -1264,7 +1293,7 @@ document.getElementById('saveAddBtn').addEventListener('click', ()=>{
   setTimeout(()=>{
     const el = document.getElementById('row-' + newTask.id);
     if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); }
-  }, 100);
+  }, 120);
 });
 
 loadState();

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Delivery Control — Enterprise Build</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0A111B;
+  --bg-2:#0D1523;
+  --panel:#121C2B;
+  --panel-hi:#16223400;
+  --border:#223148;
+  --border-soft:#1A2637;
+  --text-hi:#EAF1F8;
+  --text-mid:#8FA1B8;
+  --text-low:#526176;
+  --amber:#EFA23B;
+  --amber-dim:#4A3A22;
+  --emerald:#33C481;
+  --emerald-dim:#173327;
+  --blue:#4F9DE0;
+  --blue-dim:#172B3D;
+  --slate:#65788F;
+  --slate-dim:#1B2635;
+  --rose:#E2596B;
+  --rose-dim:#3A1E24;
+  --amberline:#E0A93A;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:transparent;}
+body{
+  font-family:'Inter',sans-serif;
+  color:var(--text-hi);
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(239,162,59,0.07), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(79,157,224,0.06), transparent 60%),
+    var(--bg);
+  min-height:100vh;
+}
+.grid-overlay{
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(ellipse 100% 60% at 50% 0%, black 40%, transparent 100%);
+}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:28px 24px 80px;}
+
+/* ---------- HEADER ---------- */
+.header{
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:20px; flex-wrap:wrap; margin-bottom:22px;
+}
+.brand{display:flex; align-items:center; gap:12px;}
+.pulse{
+  width:10px;height:10px;border-radius:50%;background:var(--emerald);
+  box-shadow:0 0 0 0 rgba(51,196,129,0.6);
+  animation:pulse 2.2s infinite;
+  flex-shrink:0;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(51,196,129,0.55);}
+  70%{box-shadow:0 0 0 9px rgba(51,196,129,0);}
+  100%{box-shadow:0 0 0 0 rgba(51,196,129,0);}
+}
+.brand-text .eyebrow{
+  font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em;
+  color:var(--amber); text-transform:uppercase; margin:0 0 4px;
+}
+.brand-text h1{
+  font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700;
+  margin:0; letter-spacing:-0.01em; color:var(--text-hi);
+}
+.brand-text .sub{
+  font-size:13px; color:var(--text-mid); margin-top:4px;
+}
+.sub input{
+  background:none;border:none;color:var(--text-mid);font-size:13px;font-family:'Inter',sans-serif;
+  border-bottom:1px dashed transparent; padding:0 2px; width:150px;
+}
+.sub input:hover{border-bottom-color:var(--border);}
+.sub input:focus{outline:none;border-bottom-color:var(--amber);color:var(--text-hi);}
+
+.week-picker{
+  display:flex; align-items:center; gap:8px; background:var(--panel);
+  border:1px solid var(--border); border-radius:10px; padding:6px; height:fit-content;
+}
+.week-picker span{
+  font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-low);
+  text-transform:uppercase; letter-spacing:.1em; padding:0 8px;
+}
+.week-btn{
+  font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
+  padding:8px 14px; border-radius:7px; border:1px solid transparent;
+  background:transparent; color:var(--text-mid); cursor:pointer; transition:all .15s ease;
+}
+.week-btn:hover{color:var(--text-hi);}
+.week-btn.active{
+  background:linear-gradient(180deg, rgba(239,162,59,0.18), rgba(239,162,59,0.08));
+  border-color:rgba(239,162,59,0.5); color:var(--amber);
+}
+
+/* ---------- KPI ROW ---------- */
+.kpis{
+  display:grid; grid-template-columns:1.3fr repeat(4,1fr); gap:12px; margin-bottom:14px;
+}
+.kpi{
+  background:var(--panel); border:1px solid var(--border); border-radius:12px;
+  padding:16px 18px; position:relative; overflow:hidden;
+}
+.kpi .n{font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:700; line-height:1;}
+.kpi .l{font-size:11px; color:var(--text-mid); margin-top:8px; text-transform:uppercase; letter-spacing:.09em;}
+.kpi.total .n{color:var(--text-hi);}
+.kpi.done .n{color:var(--emerald);}
+.kpi.staged .n{color:var(--blue);}
+.kpi.progress .n{color:var(--amber);}
+.kpi.pending .n{color:var(--slate);}
+.kpi::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;}
+.kpi.done::after{background:var(--emerald);}
+.kpi.staged::after{background:var(--blue);}
+.kpi.progress::after{background:var(--amber);}
+.kpi.pending::after{background:var(--slate);}
+
+.kpi.overall{
+  grid-row:span 1; display:flex; flex-direction:column; justify-content:center;
+}
+.overall-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.overall-top .n{font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;color:var(--text-hi);}
+.overall-top .l{font-size:11px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.09em;}
+.bar-track{height:8px;border-radius:5px;background:var(--bg-2);overflow:hidden;border:1px solid var(--border-soft);}
+.bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#E0A93A,var(--emerald));transition:width .5s ease;}
+
+/* ---------- SIGNAL STRIP ---------- */
+.strip-card{
+  background:var(--panel); border:1px solid var(--border); border-radius:12px;
+  padding:16px 18px 18px; margin-bottom:18px;
+}
+.strip-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.strip-head h3{
+  font-family:'Space Grotesk',sans-serif;font-size:13px;margin:0;color:var(--text-hi);
+  text-transform:uppercase; letter-spacing:.08em;
+}
+.legend{display:flex;gap:14px;flex-wrap:wrap;}
+.legend span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-mid);display:flex;align-items:center;gap:5px;}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.strip{display:flex;gap:5px;flex-wrap:wrap;}
+.led{
+  width:26px;height:26px;border-radius:5px;border:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(0,0,0,0.55);font-weight:700;
+  cursor:pointer; transition:transform .12s ease;
+}
+.led:hover{transform:translateY(-3px);}
+.led.pending{background:var(--slate-dim);border-color:var(--slate);color:var(--slate);}
+.led.inprogress{background:var(--amber-dim);color:var(--amber);border-color:rgba(239,162,59,.5);box-shadow:0 0 10px rgba(239,162,59,.25);}
+.led.devdone{background:var(--blue-dim);color:var(--blue);border-color:rgba(79,157,224,.5);}
+.led.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.5);}
+
+/* ---------- TOOLBAR ---------- */
+.toolbar{
+  display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;
+}
+.filter-btn{
+  font-family:'JetBrains Mono',monospace; font-size:11px; padding:7px 12px; border-radius:7px;
+  border:1px solid var(--border); background:var(--panel); color:var(--text-mid); cursor:pointer;
+  text-transform:uppercase; letter-spacing:.05em; transition:all .15s ease;
+}
+.filter-btn:hover{color:var(--text-hi);border-color:var(--text-low);}
+.filter-btn.active{background:var(--text-hi);color:var(--bg);border-color:var(--text-hi);}
+.search-wrap{margin-left:auto;position:relative;}
+.search-wrap input{
+  background:var(--panel); border:1px solid var(--border); border-radius:7px;
+  padding:8px 12px 8px 30px; color:var(--text-hi); font-family:'Inter',sans-serif; font-size:12px;
+  width:220px;
+}
+.search-wrap input:focus{outline:none;border-color:var(--amber);}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.5;}
+.add-btn{
+  font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 14px; border-radius:7px;
+  border:1px solid rgba(239,162,59,.5); background:rgba(239,162,59,.1); color:var(--amber);
+  cursor:pointer; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap;
+}
+.add-btn:hover{background:rgba(239,162,59,.18);}
+
+/* ---------- SECTIONS / TABLE ---------- */
+.section{margin-bottom:16px;}
+.section-head{
+  display:flex; align-items:center; gap:10px; padding:8px 4px; cursor:pointer; user-select:none;
+}
+.section-head .dot{width:8px;height:8px;border-radius:50%;}
+.section-head h4{
+  font-family:'JetBrains Mono',monospace; font-size:11px; margin:0; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--text-mid);
+}
+.section-head .count{
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-low);
+  background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:1px 8px;
+}
+.section-head .chev{margin-left:auto;color:var(--text-low);transition:transform .15s ease;font-size:11px;}
+.section.collapsed .chev{transform:rotate(-90deg);}
+.section.collapsed .cards{display:none;}
+
+.cards{display:flex;flex-direction:column;gap:8px;}
+.card{
+  background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
+  border-radius:10px; padding:14px 16px; display:grid;
+  grid-template-columns:78px 56px 1fr 100px 190px 140px 30px;
+  gap:14px; align-items:center; transition:border-color .15s ease;
+}
+.card:hover{border-color:var(--border);}
+.card.st-pending{border-left-color:var(--slate);}
+.card.st-inprogress{border-left-color:var(--amber);}
+.card.st-devdone{border-left-color:var(--blue);}
+.card.st-done{border-left-color:var(--emerald);}
+
+.c-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mid);font-weight:600;}
+.c-client{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-low);}
+.c-client span{color:var(--text-mid);}
+.c-title-wrap .title{
+  font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--text-hi);
+  background:none;border:none;width:100%;padding:1px 0;font-family:'Space Grotesk',sans-serif;
+}
+.c-title-wrap .title:focus{outline:none;border-bottom:1px solid var(--amber);}
+.c-title-wrap .desc{
+  font-size:12px; color:var(--text-mid); background:none;border:none;width:100%;margin-top:2px;
+  font-family:'Inter',sans-serif; padding:1px 0;
+}
+.c-title-wrap .desc:focus{outline:none;border-bottom:1px solid var(--border);}
+
+.pill{
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; border-radius:6px; padding:5px 8px; text-align:center; border:1px solid transparent;
+  appearance:none; -webkit-appearance:none; cursor:pointer; width:100%;
+}
+.pill.high{background:var(--rose-dim);color:var(--rose);border-color:rgba(226,89,107,.4);}
+.pill.medium{background:var(--amber-dim);color:var(--amberline);border-color:rgba(224,169,58,.4);}
+.pill.low{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.4);}
+
+.c-dep input{
+  background:none;border:none;color:var(--text-mid); font-size:11.5px; width:100%;
+  font-family:'Inter',sans-serif; padding:1px 0;
+}
+.c-dep input::placeholder{color:var(--text-low);}
+.c-dep input:focus{outline:none;border-bottom:1px solid var(--border);}
+
+.status-pill{
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  border-radius:6px; padding:6px 8px; border:1px solid transparent; cursor:pointer; width:100%;
+  appearance:none;-webkit-appearance:none;
+}
+.status-pill.pending{background:var(--slate-dim);color:var(--slate);border-color:rgba(101,120,143,.4);}
+.status-pill.inprogress{background:var(--amber-dim);color:var(--amber);border-color:rgba(239,162,59,.4);}
+.status-pill.devdone{background:var(--blue-dim);color:var(--blue);border-color:rgba(79,157,224,.4);}
+.status-pill.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.4);}
+
+.c-del{background:none;border:none;color:var(--text-low);cursor:pointer;font-size:15px;padding:4px;border-radius:6px;}
+.c-del:hover{color:var(--rose);background:var(--rose-dim);}
+
+.col-labels{
+  display:grid; grid-template-columns:78px 56px 1fr 100px 190px 140px 30px; gap:14px;
+  padding:0 16px; margin-bottom:6px;
+}
+.col-labels span{
+  font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-low);
+  text-transform:uppercase;letter-spacing:.09em;
+}
+
+/* ---------- VIEW MORE PAGINATION ---------- */
+.view-more-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 10px 16px; margin-top: 4px; border-radius: 8px;
+  background: var(--panel); border: 1px dashed var(--border);
+  color: var(--text-mid); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; cursor: pointer; transition: all .15s ease;
+}
+.view-more-btn:hover {
+  background: var(--bg-2); color: var(--amber); border-color: rgba(239,162,59,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.view-more-btn .arrow { font-size: 13px; transition: transform 0.2s ease; }
+.view-more-btn:hover .arrow { transform: translateY(2px); }
+
+.footer-note{
+  margin-top:22px; font-size:11px; color:var(--text-low); text-align:center;
+  font-family:'JetBrains Mono',monospace;
+}
+.footer-note span{color:var(--amber);}
+
+@media(max-width:900px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .kpi.overall{grid-column:span 2;}
+  .card{grid-template-columns:1fr; grid-template-areas:none;}
+  .col-labels{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="grid-overlay"></div>
+<div class="wrap">
+
+  <div class="header">
+    <div class="brand">
+      <div class="pulse"></div>
+      <div class="brand-text">
+        <p class="eyebrow">Delivery Control</p>
+        <h1>Enterprise Data &amp; Integration Build</h1>
+        <div class="sub">Client: <input id="clientName" value="—" /> · <span id="totalFeatureCount">0</span> features · 3-week delivery window · <span id="lastUpdated"></span></div>
+      </div>
+    </div>
+    <div class="week-picker">
+      <span>Reporting</span>
+      <button class="week-btn" data-week="1">Week 1</button>
+      <button class="week-btn" data-week="2">Week 2</button>
+      <button class="week-btn" data-week="3">Week 3</button>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi overall">
+      <div class="overall-top"><span class="n" id="pctComplete">0%</span><span class="l">Overall complete</span></div>
+      <div class="bar-track"><div class="bar-fill" id="pctBar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi total"><div class="n" id="kpiTotal">0</div><div class="l">Total features</div></div>
+    <div class="kpi pending"><div class="n" id="kpiPending">0</div><div class="l">Pending</div></div>
+    <div class="kpi progress"><div class="n" id="kpiProgress">0</div><div class="l">In progress</div></div>
+    <div class="kpi staged"><div class="n" id="kpiStaged">0</div><div class="l">Dev-done</div></div>
+  </div>
+
+  <div class="strip-card">
+    <div class="strip-head">
+      <h3>Feature signal strip</h3>
+      <div class="legend">
+        <span><i style="background:var(--slate)"></i>Pending</span>
+        <span><i style="background:var(--amber)"></i>In progress</span>
+        <span><i style="background:var(--blue)"></i>Dev-done</span>
+        <span><i style="background:var(--emerald)"></i>Done</span>
+      </div>
+    </div>
+    <div class="strip" id="strip"></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="inprogress">In progress</button>
+    <button class="filter-btn" data-filter="devdone">Dev-done</button>
+    <button class="filter-btn" data-filter="done">Done</button>
+    <div class="search-wrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8FA1B8" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" placeholder="Search features…" />
+    </div>
+    <button class="add-btn" id="addBtn">+ Add feature</button>
+  </div>
+
+  <div class="col-labels">
+    <span>Task ID</span><span>Client</span><span>Title &amp; description</span><span>Complexity</span><span>Dependencies</span><span>Status</span><span></span>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="footer-note">Edits save automatically to this dashboard · click any field to edit · <span id="genNote"></span></div>
+
+</div>
+
+<script>
+// =========================================================================
+// GOOGLE WORKSHEET CONFIGURATION
+// Place your Google Sheet ID or Google Apps Script Web App URL below
+// =========================================================================
+const SPREADSHEET_ID = ''; // e.g., '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+const SHEET_TAB_NAME = 'Task Tracker';
+const GOOGLE_SCRIPT_URL = ''; // Apps Script Web App URL (returns JSON from doGet, appends row from doPost)
+
+const PAGE_SIZE = 6; // Initial number of items visible per section before "View More"
+
+const STATUS_ORDER = ['pending','inprogress','devdone','done'];
+const STATUS_LABEL = {pending:'Pending', inprogress:'In Progress', devdone:'Dev-Done', done:'Done'};
+const STATUS_DOT = {pending:'var(--slate)', inprogress:'var(--amber)', devdone:'var(--blue)', done:'var(--emerald)'};
+
+let state = {
+  clientName: '—',
+  week: 1,
+  tasks: []
+};
+
+let activeFilter = 'all';
+let collapsedSections = {};
+let visibleLimits = { pending: PAGE_SIZE, inprogress: PAGE_SIZE, devdone: PAGE_SIZE, done: PAGE_SIZE };
+
+const STORE_KEY = 'delivery-board-state';
+
+function getItem(key) {
+  try { return localStorage.getItem(key); } catch(e){ return null; }
+}
+function setItem(key, val) {
+  try { localStorage.setItem(key, val); } catch(e){}
+}
+
+function getActiveSheetId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('sheetId') || urlParams.get('id') || SPREADSHEET_ID;
+}
+
+function getActiveScriptUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('scriptUrl') || GOOGLE_SCRIPT_URL;
+}
+
+// Fetch Data directly from Apps Script Web App (doGet) or Google Sheet GViz API
+async function fetchWorksheetData() {
+  const scriptUrl = getActiveScriptUrl();
+  const sheetId = getActiveSheetId();
+
+  if (scriptUrl) {
+    try {
+      const res = await fetch(scriptUrl);
+      if (res.ok) {
+        const rawData = await res.json();
+        if (Array.isArray(rawData) && rawData.length > 0) {
+          const parsed = parse2DArrayTasks(rawData);
+          if (parsed && parsed.length > 0) return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Apps Script fetch failed, attempting GViz fallback:", e);
+    }
+  }
+
+  if (sheetId) {
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      const jsonStr = text.replace(/^[^\({]*\(/, '').replace(/\);?\s*$/, '');
+      const data = JSON.parse(jsonStr);
+      if (data.table && data.table.rows) {
+        const rows2D = data.table.rows.map(r => (r.c || []).map(cell => cell && cell.v != null ? cell.v : ''));
+        const parsed = parse2DArrayTasks(rows2D);
+        if (parsed && parsed.length > 0) return parsed;
+      }
+    } catch (err) {
+      console.warn("GViz fetch failed:", err);
+    }
+  }
+
+  return null;
+}
+
+function parse2DArrayTasks(rows) {
+  let headerRowIdx = -1;
+  let colMap = { id: 0, client: 1, titleDesc: 2, complexity: 3, deps: 4, status: 5 };
+
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const cellVals = (rows[i] || []).map(v => String(v || '').trim().toLowerCase());
+    if (cellVals.some(v => v.includes('task id'))) {
+      headerRowIdx = i;
+      cellVals.forEach((v, colIdx) => {
+        if (v.includes('task id')) colMap.id = colIdx;
+        else if (v.includes('client')) colMap.client = colIdx;
+        else if (v.includes('title') || v.includes('description')) colMap.titleDesc = colIdx;
+        else if (v.includes('complexity')) colMap.complexity = colIdx;
+        else if (v.includes('depend')) colMap.deps = colIdx;
+        else if (v.includes('status')) colMap.status = colIdx;
+      });
+      break;
+    }
+  }
+
+  const startIdx = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
+  const parsedTasks = [];
+
+  for (let i = startIdx; i < rows.length; i++) {
+    const cells = rows[i] || [];
+    const getVal = (idx) => String(cells[idx] != null ? cells[idx] : '').trim();
+    
+    const rawId = getVal(colMap.id);
+    if (!rawId || !rawId.toUpperCase().startsWith('TASK-')) continue;
+
+    const rawClient = getVal(colMap.client) || '—';
+    const rawTitleDesc = getVal(colMap.titleDesc);
+    const rawComplexity = getVal(colMap.complexity).toLowerCase();
+    const rawDeps = getVal(colMap.deps) || 'None';
+    const rawStatus = getVal(colMap.status).toLowerCase();
+
+    let title = rawTitleDesc;
+    let desc = '';
+    if (rawTitleDesc.includes(':')) {
+      const parts = rawTitleDesc.split(':');
+      title = parts[0].trim();
+      desc = parts.slice(1).join(':').trim();
+    }
+
+    let complexity = 'medium';
+    if (rawComplexity.includes('high')) complexity = 'high';
+    else if (rawComplexity.includes('low')) complexity = 'low';
+
+    let status = 'pending';
+    if (rawStatus === 'done' || rawStatus.includes('complete')) status = 'done';
+    else if (rawStatus.includes('dev') || rawStatus.includes('stage')) status = 'devdone';
+    else if (rawStatus.includes('progress') || rawStatus.includes('doing')) status = 'inprogress';
+
+    parsedTasks.push({
+      id: rawId,
+      client: rawClient,
+      title: title,
+      desc: desc,
+      complexity: complexity,
+      deps: rawDeps,
+      status: status
+    });
+  }
+
+  return parsedTasks;
+}
+
+// Append New Task directly to Google Sheet via Apps Script Web App Endpoint (doPost)
+async function appendTaskToSheet(task) {
+  const scriptUrl = getActiveScriptUrl();
+  if (!scriptUrl) return;
+
+  const titleDesc = task.title + (task.desc ? ': ' + task.desc : '');
+  const complexityLabel = (task.complexity || 'medium').charAt(0).toUpperCase() + (task.complexity || 'medium').slice(1);
+  const statusMap = { done:'Done', devdone:'Dev-Done', inprogress:'In-Progress', pending:'Pending' };
+  const statusLabel = statusMap[task.status] || 'Pending';
+
+  const payload = {
+    row: [
+      task.id,
+      task.client || '—',
+      titleDesc,
+      complexityLabel,
+      task.deps || 'None',
+      statusLabel
+    ],
+    id: task.id,
+    client: task.client || '—',
+    title: task.title,
+    desc: task.desc,
+    complexity: complexityLabel,
+    deps: task.deps || 'None',
+    status: statusLabel
+  };
+
+  try {
+    await fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    console.log("New task appended to Google Sheet:", task.id);
+  } catch (err) {
+    console.error("Failed to append task to Google Sheet:", err);
+  }
+}
+
+async function loadState(){
+  const savedState = getItem(STORE_KEY);
+  if (savedState) {
+    try {
+      const parsed = JSON.parse(savedState);
+      if (parsed && Array.isArray(parsed.tasks)) state = parsed;
+    } catch(e){}
+  }
+
+  const liveTasks = await fetchWorksheetData();
+  if (liveTasks && liveTasks.length > 0) {
+    state.tasks = liveTasks;
+  }
+
+  render();
+}
+
+let saveTimer = null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    setItem(STORE_KEY, JSON.stringify(state));
+  }, 250);
+}
+
+function counts(){
+  const c = {pending:0, inprogress:0, devdone:0, done:0};
+  state.tasks.forEach(t => {
+    if (c[t.status] !== undefined) c[t.status]++;
+    else c.pending++;
+  });
+  return c;
+}
+
+function render(){
+  document.getElementById('clientName').value = state.clientName;
+  document.querySelectorAll('.week-btn').forEach(b=>{
+    b.classList.toggle('active', Number(b.dataset.week)===state.week);
+  });
+  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  document.getElementById('genNote').textContent = 'AFA Intellisoft delivery board';
+
+  const c = counts();
+  const total = state.tasks.length;
+  document.getElementById('totalFeatureCount').textContent = total;
+
+  const pct = total ? Math.round((c.done/total)*100) : 0;
+  document.getElementById('pctComplete').textContent = pct + '%';
+  document.getElementById('pctBar').style.width = pct + '%';
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiPending').textContent = c.pending;
+  document.getElementById('kpiProgress').textContent = c.inprogress;
+  document.getElementById('kpiStaged').textContent = c.devdone;
+
+  // signal strip
+  const strip = document.getElementById('strip');
+  strip.innerHTML = '';
+  state.tasks.forEach((t)=>{
+    const led = document.createElement('div');
+    led.className = 'led ' + t.status;
+    led.title = t.id + ' — ' + t.title + ' (' + STATUS_LABEL[t.status] + ')';
+    led.textContent = t.id.replace('TASK-','');
+    led.addEventListener('click', ()=>{
+      const el = document.getElementById('row-'+t.id);
+      if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.style.borderColor = 'var(--amber)'; setTimeout(()=> el.style.borderColor='', 900); }
+    });
+    strip.appendChild(led);
+  });
+
+  renderSections();
+  saveState();
+}
+
+function matchesFilter(t){
+  if(activeFilter !== 'all' && t.status !== activeFilter) return false;
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  if(q && !(t.title.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.id.toLowerCase().includes(q))) return false;
+  return true;
+}
+
+function renderSections(){
+  const container = document.getElementById('sections');
+  container.innerHTML = '';
+
+  STATUS_ORDER.forEach(statusKey=>{
+    const items = state.tasks.filter(t=> t.status===statusKey && matchesFilter(t));
+    const allInStatus = state.tasks.filter(t=>t.status===statusKey);
+    if(activeFilter !== 'all' && activeFilter !== statusKey) return;
+    if(document.getElementById('search').value.trim() && items.length===0) return;
+
+    const limit = visibleLimits[statusKey] || PAGE_SIZE;
+    const visibleItems = items.slice(0, limit);
+
+    const section = document.createElement('div');
+    section.className = 'section' + (collapsedSections[statusKey] ? ' collapsed':'');
+
+    const head = document.createElement('div');
+    head.className = 'section-head';
+    head.innerHTML = `<span class="dot" style="background:${STATUS_DOT[statusKey]}"></span>
+      <h4>${STATUS_LABEL[statusKey]}</h4>
+      <span class="count">${allInStatus.length}</span>
+      <span class="chev">▾</span>`;
+    head.addEventListener('click', ()=>{
+      collapsedSections[statusKey] = !collapsedSections[statusKey];
+      renderSections();
+    });
+    section.appendChild(head);
+
+    const cards = document.createElement('div');
+    cards.className = 'cards';
+    visibleItems.forEach(t=>{
+      cards.appendChild(buildCard(t));
+    });
+
+    // View More Pagination Button
+    if (items.length > limit) {
+      const remaining = items.length - limit;
+      const viewMoreBtn = document.createElement('button');
+      viewMoreBtn.className = 'view-more-btn';
+      viewMoreBtn.innerHTML = `<span>View More</span> <span style="opacity:0.75">(${remaining} remaining)</span> <span class="arrow">▾</span>`;
+      viewMoreBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        visibleLimits[statusKey] = limit + PAGE_SIZE;
+        renderSections();
+      });
+      cards.appendChild(viewMoreBtn);
+    }
+
+    section.appendChild(cards);
+    container.appendChild(section);
+  });
+}
+
+function buildCard(t){
+  const card = document.createElement('div');
+  card.className = 'card st-' + t.status;
+  card.id = 'row-' + t.id;
+
+  const displayClient = (t.client && t.client !== '—') 
+    ? (t.client.startsWith('Q') || t.client.startsWith('#') ? escapeAttr(t.client) : '#' + escapeAttr(t.client)) 
+    : '—';
+
+  card.innerHTML = `
+    <div class="c-id">${t.id}</div>
+    <div class="c-client">${displayClient}</div>
+    <div class="c-title-wrap">
+      <input class="title" value="${escapeAttr(t.title)}" />
+      <input class="desc" value="${escapeAttr(t.desc)}" />
+    </div>
+    <select class="pill ${t.complexity}">
+      <option value="high" ${t.complexity==='high'?'selected':''}>High</option>
+      <option value="medium" ${t.complexity==='medium'?'selected':''}>Medium</option>
+      <option value="low" ${t.complexity==='low'?'selected':''}>Low</option>
+    </select>
+    <div class="c-dep"><input value="${escapeAttr(t.deps)}" placeholder="None" /></div>
+    <select class="status-pill ${t.status}">
+      <option value="pending" ${t.status==='pending'?'selected':''}>Pending</option>
+      <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+      <option value="devdone" ${t.status==='devdone'?'selected':''}>Dev-Done</option>
+      <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+    </select>
+    <button class="c-del" title="Remove feature">✕</button>
+  `;
+
+  card.querySelector('.title').addEventListener('input', e=>{ t.title = e.target.value; saveState(); refreshStripLabel(t);});
+  card.querySelector('.desc').addEventListener('input', e=>{ t.desc = e.target.value; saveState(); });
+  card.querySelector('.c-dep input').addEventListener('input', e=>{ t.deps = e.target.value; saveState(); });
+  card.querySelector('.pill').addEventListener('change', e=>{
+    t.complexity = e.target.value;
+    e.target.className = 'pill ' + t.complexity;
+    saveState();
+  });
+  card.querySelector('.status-pill').addEventListener('change', e=>{
+    t.status = e.target.value;
+    render();
+  });
+  card.querySelector('.c-del').addEventListener('click', ()=>{
+    if(confirm('Remove ' + t.id + ' — ' + t.title + '?')){
+      state.tasks = state.tasks.filter(x=>x!==t);
+      render();
+    }
+  });
+
+  return card;
+}
+
+function refreshStripLabel(t){
+  const led = document.getElementById('strip');
+  if(!led) return;
+  render();
+}
+
+function escapeAttr(s){
+  return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+document.getElementById('clientName').addEventListener('input', e=>{ state.clientName = e.target.value; saveState(); });
+
+document.querySelectorAll('.week-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{ state.week = Number(b.dataset.week); render(); });
+});
+
+document.querySelectorAll('.filter-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    activeFilter = b.dataset.filter;
+    renderSections();
+  });
+});
+
+document.getElementById('search').addEventListener('input', renderSections);
+
+document.getElementById('addBtn').addEventListener('click', ()=>{
+  const n = state.tasks.length + 1;
+  const newTask = {
+    id: 'TASK-' + String(n).padStart(2,'0'),
+    client:'—', title:'New feature', desc:'Click to edit description',
+    complexity:'medium', deps:'None', status:'pending'
+  };
+  state.tasks.push(newTask);
+
+  // Increase visible limit for pending status so the new task is immediately visible
+  visibleLimits['pending'] = (visibleLimits['pending'] || PAGE_SIZE) + 1;
+
+  render();
+
+  // Write new task directly to Google Sheet if GOOGLE_SCRIPT_URL is configured
+  appendTaskToSheet(newTask);
+
+  setTimeout(()=>{
+    const el = document.getElementById('row-'+newTask.id);
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.querySelector('.title').focus(); el.querySelector('.title').select(); }
+  }, 60);
+});
+
+loadState();
+</script>
+</body>
+</html>

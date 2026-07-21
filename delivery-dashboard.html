@@ -52,10 +52,11 @@ body{
 
 /* ---------- FUTURISTIC APP LOADER OVERLAY ---------- */
 .app-loader-overlay {
-  position: fixed; inset: 0; background: rgba(10, 17, 27, 0.92);
-  backdrop-filter: blur(12px); z-index: 99999; display: flex;
+  position: fixed; inset: 0; background: rgba(10, 17, 27, 0.94);
+  z-index: 99999; display: flex;
   align-items: center; justify-content: center; flex-direction: column;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  will-change: opacity;
 }
 .app-loader-overlay.hidden {
   opacity: 0; visibility: hidden; pointer-events: none;
@@ -336,8 +337,8 @@ body{
   background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
   border-radius:10px; padding:14px 16px; display:grid;
   grid-template-columns:78px 56px 1fr 100px 190px 140px 30px;
-  gap:14px; align-items:center; transition:all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, box-shadow;
+  gap:14px; align-items:center; transition:border-color 0.15s ease;
+  will-change: transform;
 }
 .card:hover{border-color:var(--border);}
 .card.st-pending{border-left-color:var(--slate);}
@@ -347,14 +348,13 @@ body{
 
 /* Card New Entry High-End Motion & Glow Animation */
 .card-new-entry {
-  animation: cardInsert 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  box-shadow: 0 0 24px rgba(239, 162, 59, 0.4);
+  animation: cardInsert 0.45s ease forwards;
+  box-shadow: 0 0 20px rgba(239, 162, 59, 0.35);
   border-color: var(--amber) !important;
 }
 @keyframes cardInsert {
-  0% { opacity: 0; transform: translateY(-20px) scale(0.96); }
-  60% { opacity: 1; transform: translateY(3px) scale(1.008); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(-12px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .c-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mid);font-weight:600;}
@@ -431,19 +431,21 @@ body{
 }
 .footer-note span{color:var(--amber);}
 
-/* ---------- MODAL DIALOG & SMOOTH ANIMATIONS ---------- */
+/* ---------- ULTRA LIGHTWEIGHT & FAST MODAL ---------- */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(10, 17, 27, 0.85); backdrop-filter: blur(8px);
+  position: fixed; inset: 0; background: rgba(8, 14, 23, 0.88);
   z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0;
-  pointer-events: none; transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none; transition: opacity 0.18s ease;
+  will-change: opacity;
 }
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
 
 .modal-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-  width: 90%; max-width: 520px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-  transform: translateY(24px) scale(0.95); opacity: 0;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  width: 90%; max-width: 520px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  transform: translateY(14px) scale(0.97); opacity: 0;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  will-change: transform, opacity;
 }
 .modal-overlay.open .modal-card {
   transform: translateY(0) scale(1); opacity: 1;
@@ -459,7 +461,7 @@ body{
 .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--amber); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
 .btn-primary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: var(--amber); color: var(--bg); border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: all 0.15s ease; }
-.btn-primary:hover { background: #f5b352; transform: translateY(-1px); }
+.btn-primary:hover { background: #f5b352; }
 .btn-secondary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: transparent; color: var(--text-mid); border: 1px solid var(--border); cursor: pointer; text-transform: uppercase; transition: all 0.15s ease; }
 .btn-secondary:hover { color: var(--text-hi); border-color: var(--text-low); }
 
@@ -946,7 +948,7 @@ function saveState(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
     setItem(STORE_KEY, JSON.stringify(state));
-  }, 250);
+  }, 300);
 }
 
 function counts(){
@@ -1011,6 +1013,7 @@ function render(){
   state.tasks.forEach((t)=>{
     const led = document.createElement('div');
     led.className = 'led ' + t.status;
+    led.setAttribute('data-id', t.id);
     led.title = t.id + ' — ' + t.title + ' (' + STATUS_LABEL[t.status] + ')';
     led.textContent = t.id.replace('TASK-','');
     led.addEventListener('click', ()=>{
@@ -1136,7 +1139,7 @@ function buildCard(t){
     setTimeout(() => {
       card.classList.remove('card-new-entry');
       if (newlyAddedId === t.id) newlyAddedId = null;
-    }, 2200);
+    }, 1800);
   }
 
   const displayClient = (t.client && t.client !== '—') 
@@ -1165,7 +1168,13 @@ function buildCard(t){
     <button class="c-del" title="Remove feature">✕</button>
   `;
 
-  card.querySelector('.title').addEventListener('input', e=>{ t.title = e.target.value; saveState(); refreshStripLabel(t);});
+  // HIGH-PERFORMANCE NO-LAG INPUT LISTENERS (Targeted updates without full page re-render)
+  card.querySelector('.title').addEventListener('input', e=>{
+    t.title = e.target.value;
+    saveState();
+    const led = document.querySelector(`.led[data-id="${t.id}"]`);
+    if (led) led.title = `${t.id} — ${t.title} (${STATUS_LABEL[t.status]})`;
+  });
   card.querySelector('.desc').addEventListener('input', e=>{ t.desc = e.target.value; saveState(); });
   card.querySelector('.c-dep input').addEventListener('input', e=>{ t.deps = e.target.value; saveState(); });
   card.querySelector('.pill').addEventListener('change', e=>{
@@ -1186,12 +1195,6 @@ function buildCard(t){
   });
 
   return card;
-}
-
-function refreshStripLabel(t){
-  const led = document.getElementById('strip');
-  if(!led) return;
-  render();
 }
 
 function escapeAttr(s){
@@ -1234,7 +1237,7 @@ document.getElementById('search').addEventListener('input', ()=>{
   searchDebounceTimer = setTimeout(renderSections, 150);
 });
 
-// Modal Add Feature Handlers
+// Modal Add Feature Handlers (Fast Hardware-Accelerated Modal)
 const addFeatureModal = document.getElementById('addFeatureModal');
 const addTitle = document.getElementById('addTitle');
 const addDesc = document.getElementById('addDesc');
@@ -1251,7 +1254,7 @@ document.getElementById('addBtn').addEventListener('click', ()=>{
   addDeps.value = 'None';
   addStatus.value = 'pending';
   addFeatureModal.classList.add('open');
-  setTimeout(()=> addTitle.focus(), 100);
+  requestAnimationFrame(() => addTitle.focus());
 });
 
 document.getElementById('closeAddModalBtn').addEventListener('click', ()=>{
@@ -1293,7 +1296,7 @@ document.getElementById('saveAddBtn').addEventListener('click', ()=>{
   setTimeout(()=>{
     const el = document.getElementById('row-' + newTask.id);
     if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); }
-  }, 120);
+  }, 50);
 });
 
 loadState();

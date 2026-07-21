@@ -174,40 +174,56 @@ body{
 .led.devdone{background:var(--blue-dim);color:var(--blue);border-color:rgba(79,157,224,.5);}
 .led.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.5);}
 
-/* ---------- ENHANCED TOOLBAR & FILTERS ---------- */
-.toolbar{
-  display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;
+/* ---------- REDESIGNED TOOLBAR CONTAINER ---------- */
+.toolbar-container {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 18px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 14px;
 }
-.filter-btn{
-  font-family:'JetBrains Mono',monospace; font-size:11px; padding:7px 12px; border-radius:7px;
-  border:1px solid var(--border); background:var(--panel); color:var(--text-mid); cursor:pointer;
-  text-transform:uppercase; letter-spacing:.05em; transition:all .15s ease;
+.toolbar-left {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;
 }
-.filter-btn:hover{color:var(--text-hi);border-color:var(--text-low);}
-.filter-btn.active{background:var(--text-hi);color:var(--bg);border-color:var(--text-hi);}
+.toolbar-right {
+  display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap;
+}
+.filter-tabs {
+  display: flex; gap: 3px; background: var(--bg-2); border: 1px solid var(--border-soft);
+  border-radius: 8px; padding: 3px; overflow-x: auto; max-width: 100%;
+}
+.filter-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 12px; border-radius: 6px;
+  border: none; background: transparent; color: var(--text-mid); cursor: pointer;
+  text-transform: uppercase; letter-spacing: .05em; transition: all .15s ease; white-space: nowrap;
+}
+.filter-btn:hover { color: var(--text-hi); }
+.filter-btn.active { background: var(--panel); color: var(--amber); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 
+.filter-dropdowns {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
 .filter-select {
   font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 7px 10px; border-radius: 7px;
-  border: 1px solid var(--border); background: var(--panel); color: var(--text-mid); cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-2); color: var(--text-mid); cursor: pointer;
   text-transform: uppercase; letter-spacing: .05em; transition: all .15s ease; outline: none;
 }
 .filter-select:hover, .filter-select:focus { color: var(--text-hi); border-color: var(--amber); }
 
-.search-wrap{margin-left:auto;position:relative;}
-.search-wrap input{
-  background:var(--panel); border:1px solid var(--border); border-radius:7px;
-  padding:8px 12px 8px 30px; color:var(--text-hi); font-family:'Inter',sans-serif; font-size:12px;
-  width:200px; transition: border-color .15s ease;
+.search-wrap { position: relative; display: flex; align-items: center; }
+.search-wrap input {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 7px;
+  padding: 8px 12px 8px 30px; color: var(--text-hi); font-family: 'Inter', sans-serif; font-size: 12px;
+  width: 190px; transition: border-color .15s ease, width .2s ease;
 }
-.search-wrap input:focus{outline:none;border-color:var(--amber);}
-.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.5;}
-.add-btn{
-  font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 14px; border-radius:7px;
-  border:1px solid rgba(239,162,59,.5); background:rgba(239,162,59,.1); color:var(--amber);
-  cursor:pointer; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap;
-  transition: all .15s ease;
+.search-wrap input:focus { outline: none; border-color: var(--amber); width: 220px; }
+.search-wrap svg { position: absolute; left: 10px; pointer-events: none; opacity: .5; }
+
+.add-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 7px;
+  border: 1px solid rgba(239,162,59,.5); background: rgba(239,162,59,.12); color: var(--amber);
+  cursor: pointer; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  font-weight: 700; transition: all .15s ease;
 }
-.add-btn:hover{background:rgba(239,162,59,.18);}
+.add-btn:hover { background: rgba(239,162,59,.22); transform: translateY(-1px); }
 
 /* ---------- SECTIONS / TABLE ---------- */
 .section{margin-bottom:16px;}
@@ -340,11 +356,28 @@ body{
 .btn-secondary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: transparent; color: var(--text-mid); border: 1px solid var(--border); cursor: pointer; text-transform: uppercase; }
 .btn-secondary:hover { color: var(--text-hi); border-color: var(--text-low); }
 
-@media(max-width:900px){
+/* ---------- RESPONSIVE DESIGN ---------- */
+@media(max-width: 1200px) {
+  .toolbar-container { flex-direction: column; align-items: stretch; }
+  .toolbar-left { width: 100%; justify-content: space-between; }
+  .toolbar-right { width: 100%; margin-top: 6px; }
+  .search-wrap { flex: 1; }
+  .search-wrap input { width: 100% !important; }
+}
+
+@media(max-width: 900px){
   .kpis{grid-template-columns:repeat(2,1fr);}
   .kpi.overall{grid-column:span 2;}
-  .card{grid-template-columns:1fr; grid-template-areas:none;}
+  .card{grid-template-columns:1fr; grid-template-areas:none; gap: 8px;}
   .col-labels{display:none;}
+}
+
+@media(max-width: 640px) {
+  .filter-tabs { width: 100%; }
+  .filter-dropdowns { width: 100%; justify-content: space-between; }
+  .filter-select { flex: 1; min-width: 100px; font-size: 10px; }
+  .toolbar-right { flex-direction: column; align-items: stretch; }
+  .add-btn { text-align: center; width: 100%; }
 }
 </style>
 </head>
@@ -394,38 +427,47 @@ body{
     <div class="strip" id="strip"></div>
   </div>
 
-  <div class="toolbar">
-    <!-- Status Filter Pills -->
-    <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="pending">Pending</button>
-    <button class="filter-btn" data-filter="inprogress">In progress</button>
-    <button class="filter-btn" data-filter="devdone">Dev-done</button>
-    <button class="filter-btn" data-filter="done">Done</button>
+  <!-- Redesigned Toolbar Container -->
+  <div class="toolbar-container">
+    <div class="toolbar-left">
+      <!-- Status Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="inprogress">In progress</button>
+        <button class="filter-btn" data-filter="devdone">Dev-done</button>
+        <button class="filter-btn" data-filter="done">Done</button>
+      </div>
 
-    <!-- Multi-Criteria Dynamic Filters & Sorting -->
-    <select class="filter-select" id="filterComplexity">
-      <option value="all">Complexity: All</option>
-      <option value="high">High</option>
-      <option value="medium">Medium</option>
-      <option value="low">Low</option>
-    </select>
+      <!-- Multi-Criteria Dynamic Dropdowns -->
+      <div class="filter-dropdowns">
+        <select class="filter-select" id="filterComplexity">
+          <option value="all">Complexity: All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
 
-    <select class="filter-select" id="filterClient">
-      <option value="all">Client: All</option>
-    </select>
+        <select class="filter-select" id="filterClient">
+          <option value="all">Client: All</option>
+        </select>
 
-    <select class="filter-select" id="sortOrder">
-      <option value="id-asc">Sort: ID (Default)</option>
-      <option value="complexity-desc">Sort: Complexity (High → Low)</option>
-      <option value="client-asc">Sort: Client Q#</option>
-      <option value="title-asc">Sort: Title (A-Z)</option>
-    </select>
-
-    <div class="search-wrap">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8FA1B8" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="search" placeholder="Search features…" />
+        <select class="filter-select" id="sortOrder">
+          <option value="id-asc">Sort: ID (Default)</option>
+          <option value="complexity-desc">Sort: Complexity (High → Low)</option>
+          <option value="client-asc">Sort: Client Q#</option>
+          <option value="title-asc">Sort: Title (A-Z)</option>
+        </select>
+      </div>
     </div>
-    <button class="add-btn" id="addBtn">+ Add feature</button>
+
+    <div class="toolbar-right">
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8FA1B8" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" placeholder="Search features…" />
+      </div>
+      <button class="add-btn" id="addBtn">+ Add feature</button>
+    </div>
   </div>
 
   <div class="col-labels">

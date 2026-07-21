@@ -871,7 +871,7 @@ async function fetchWorksheetData() {
           if (parsed && parsed.length > 0) return parsed;
         }
       } catch (err) {
-        console.warn("GViz fetch failed:", err);
+        console.warn("GViz fallback failed:", err);
       }
     }
   } finally {
@@ -924,6 +924,18 @@ function parse2DArrayTasks(rows) {
       const parts = rawTitleDesc.split(':');
       title = parts[0].trim();
       desc = parts.slice(1).join(':').trim();
+    }
+
+    // STRICT PLACEHOLDER FILTERING: Filter out empty/dummy placeholder tasks (e.g. "New feature: Click to edit description")
+    const lowerTitle = title.toLowerCase().trim();
+    const lowerRaw = rawTitleDesc.toLowerCase().trim();
+    if (!lowerTitle || 
+        lowerRaw.includes('click to edit') || 
+        lowerRaw.includes('new feature:') ||
+        lowerTitle === 'new feature' ||
+        lowerTitle === '—' ||
+        lowerRaw.includes('test (dashboard building)')) {
+      continue;
     }
 
     let complexity = 'medium';
@@ -1007,17 +1019,24 @@ function getNextTaskId() {
 
 async function loadState(){
   renderSkeletons();
-  const savedState = getItem(STORE_KEY);
-  if (savedState) {
-    try {
-      const parsed = JSON.parse(savedState);
-      if (parsed && Array.isArray(parsed.tasks)) state = parsed;
-    } catch(e){}
-  }
-
+  
   const liveTasks = await fetchWorksheetData();
   if (liveTasks && liveTasks.length > 0) {
     state.tasks = liveTasks;
+  } else {
+    const savedState = getItem(STORE_KEY);
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed && Array.isArray(parsed.tasks)) {
+          // Filter out dummy placeholders from saved state as well
+          state.tasks = parsed.tasks.filter(t => {
+            const raw = ((t.title || '') + (t.desc || '')).toLowerCase();
+            return !raw.includes('click to edit') && !raw.includes('test (dashboard building)');
+          });
+        }
+      } catch(e){}
+    }
   }
 
   updateClientFilterOptions();

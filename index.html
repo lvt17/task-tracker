@@ -751,7 +751,7 @@ function parse2DArrayTasks(rows) {
       desc = parts.slice(1).join(':').trim();
     }
 
-    // STRICT PLACEHOLDER FILTERING: Filter out empty/dummy placeholder tasks
+    // STRICT PLACEHOLDER & JUNK FILTERING: Filter out empty/dummy/numeric test titles
     const lowerTitle = title.toLowerCase().trim();
     const lowerRaw = rawTitleDesc.toLowerCase().trim();
     if (!lowerTitle || 
@@ -759,7 +759,9 @@ function parse2DArrayTasks(rows) {
         lowerRaw.includes('new feature:') ||
         lowerTitle === 'new feature' ||
         lowerTitle === '—' ||
-        lowerRaw.includes('test (dashboard building)')) {
+        lowerRaw.includes('test (dashboard building)') ||
+        /^\d+$/.test(lowerTitle) ||  // Filter out numeric-only titles like "1"
+        lowerTitle.length < 2) {     // Filter out 1-character test titles
       continue;
     }
 

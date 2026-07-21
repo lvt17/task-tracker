@@ -691,17 +691,54 @@ select option:hover, select option:focus, select option:checked {
 
 <script>
 // =========================================================================
-// SECURITY SHIELD: BLOCK CONSOLE FETCH & DEVTOOLS NETWORK EXPLOITS
+// SECURITY SHIELD: BLOCK CONSOLE FETCH & DEVTOOLS NETWORK EXPLOITS (BRITISH ENGLISH)
 // =========================================================================
 const _secureFetch = window.fetch.bind(window);
-window.fetch = function() {
-  console.error("Failed to load resource: net::ERR_BLOCKED_BY_CLIENT");
-  return Promise.reject(new TypeError("Failed to fetch: Request blocked by client security policy (ERR_BLOCKED_BY_CLIENT)"));
+
+const printSecurityNotice = function() {
+  console.clear();
+  console.log(
+    "%c🛑 RESTRICTED SYSTEM — SECURITY WARNING",
+    "color: #E2596B; font-size: 20px; font-weight: 800; font-family: monospace; background: #1B2635; padding: 6px 12px; border-radius: 4px;"
+  );
+  console.log(
+    "%cATTENTION: UNAUTHORISED CONSOLE INSPECTION DETECTED",
+    "color: #EFA23B; font-size: 13px; font-weight: 700; font-family: monospace; margin-top: 8px;"
+  );
+  console.log("%c--------------------------------------------------------------------------------", "color: #223148;");
+  console.log("%c[ERR_BLOCKED_BY_CLIENT] Console API execution disabled by enterprise security policy.", "color: #E2596B; font-weight: bold;");
+  console.log("%c[WARNING 1] Network request tampering and API extraction are strictly prohibited.", "color: #EFA23B;");
+  console.log("%c[WARNING 2] All console session activities are recorded and logged for audit purposes.", "color: #EFA23B;");
+  console.log("%c[WARNING 3] Unauthorised system analysis violates organisational compliance regulations.", "color: #EFA23B;");
+  console.log("%c[NOTICE] If you are an authorised developer, please log in via official portal credentials.", "color: #33C481; font-style: italic;");
+  console.log("%c--------------------------------------------------------------------------------", "color: #223148;");
 };
+
+// Print security banner immediately
+printSecurityNotice();
+
+// Re-trigger security warnings when DevTools console is inspected
+const detector = new Image();
+Object.defineProperty(detector, 'id', {
+  get: function() {
+    printSecurityNotice();
+  }
+});
+setInterval(function() {
+  console.dir(detector);
+}, 2000);
+
+window.fetch = function() {
+  printSecurityNotice();
+  console.error("Failed to load resource: net::ERR_BLOCKED_BY_CLIENT");
+  return Promise.reject(new TypeError("[SECURITY VIOLATION] Unauthorised console fetch blocked by security policy (ERR_BLOCKED_BY_CLIENT)"));
+};
+
 if (window.XMLHttpRequest) {
   window.XMLHttpRequest = function() {
+    printSecurityNotice();
     console.error("Failed to load resource: net::ERR_BLOCKED_BY_CLIENT");
-    throw new Error("XHR requests blocked by client security policy (ERR_BLOCKED_BY_CLIENT)");
+    throw new Error("[SECURITY VIOLATION] Unauthorised XHR request blocked by security policy (ERR_BLOCKED_BY_CLIENT)");
   };
 }
 

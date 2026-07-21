@@ -589,19 +589,8 @@ const printSecurityNotice = function() {
   console.log("%c--------------------------------------------------------------------------------", "color: #223148;");
 };
 
-// Print security banner immediately
+// Print security banner once on page load
 printSecurityNotice();
-
-// Re-trigger security warnings when DevTools console is inspected
-const detector = new Image();
-Object.defineProperty(detector, 'id', {
-  get: function() {
-    printSecurityNotice();
-  }
-});
-setInterval(function() {
-  console.dir(detector);
-}, 2000);
 
 window.fetch = function() {
   printSecurityNotice();

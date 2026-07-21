@@ -157,7 +157,7 @@ body{
 
 /* ---------- HEADER ---------- */
 .header{
-  display:flex; justify-content:space-between; align-items:flex-start;
+  display:flex; justify-content:space-between; align-items:center;
   gap:20px; flex-wrap:wrap; margin-bottom:22px;
 }
 .brand{display:flex; align-items:center; gap:12px;}
@@ -182,31 +182,6 @@ body{
 }
 .brand-text .sub{
   font-size:13px; color:var(--text-mid); margin-top:4px; display:flex; align-items:center; flex-wrap:wrap;
-}
-.sub input{
-  background:none;border:none;color:var(--text-mid);font-size:13px;font-family:'Inter',sans-serif;
-  border-bottom:1px dashed transparent; padding:0 2px; width:150px;
-}
-.sub input:hover{border-bottom-color:var(--border);}
-.sub input:focus{outline:none;border-bottom-color:var(--amber);color:var(--text-hi);}
-
-.week-picker{
-  display:flex; align-items:center; gap:8px; background:var(--panel);
-  border:1px solid var(--border); border-radius:10px; padding:6px; height:fit-content;
-}
-.week-picker span{
-  font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-low);
-  text-transform:uppercase; letter-spacing:.1em; padding:0 8px;
-}
-.week-btn{
-  font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
-  padding:8px 14px; border-radius:7px; border:1px solid transparent;
-  background:transparent; color:var(--text-mid); cursor:pointer; transition:all .15s ease;
-}
-.week-btn:hover{color:var(--text-hi);}
-.week-btn.active{
-  background:linear-gradient(180deg, rgba(239,162,59,0.18), rgba(239,162,59,0.08));
-  border-color:rgba(239,162,59,0.5); color:var(--amber);
 }
 
 /* ---------- KPI ROW ---------- */
@@ -265,7 +240,7 @@ body{
 .led.devdone{background:var(--blue-dim);color:var(--blue);border-color:rgba(79,157,224,.5);}
 .led.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.5);}
 
-/* ---------- REDESIGNED TOOLBAR CONTAINER ---------- */
+/* ---------- TOOLBAR CONTAINER ---------- */
 .toolbar-container {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: 12px; margin-bottom: 18px; background: var(--panel); border: 1px solid var(--border);
@@ -293,20 +268,12 @@ body{
   display: flex; gap: 8px; flex-wrap: wrap;
 }
 
-/* ---------- CUSTOM ENHANCED DROPDOWN SELECTS ---------- */
-select.filter-select, select.pill, select.status-pill, .form-group select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+/* ---------- CUSTOM DROPDOWN SELECTS ---------- */
+select.filter-select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%20%238FA1B8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 28px !important;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.filter-select {
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 28px !important; cursor: pointer; transition: all 0.15s ease;
   font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 7px 10px; border-radius: 7px;
   border: 1px solid var(--border); background-color: var(--bg-2); color: var(--text-mid);
   text-transform: uppercase; letter-spacing: .05em; outline: none;
@@ -317,35 +284,20 @@ select.filter-select, select.pill, select.status-pill, .form-group select {
 }
 
 select option {
-  background-color: #0D1523 !important;
-  color: #EAF1F8 !important;
-  padding: 10px 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-}
-select option:hover, select option:focus, select option:checked {
-  background-color: #162234 !important;
-  color: var(--amber) !important;
+  background-color: #0D1523 !important; color: #EAF1F8 !important; padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
 }
 
 .search-wrap { position: relative; display: flex; align-items: center; }
 .search-wrap input {
   background: var(--bg-2); border: 1px solid var(--border); border-radius: 7px;
   padding: 8px 12px 8px 30px; color: var(--text-hi); font-family: 'Inter', sans-serif; font-size: 12px;
-  width: 190px; transition: border-color .15s ease, width .2s ease;
+  width: 220px; transition: border-color .15s ease;
 }
-.search-wrap input:focus { outline: none; border-color: var(--amber); width: 220px; }
+.search-wrap input:focus { outline: none; border-color: var(--amber); }
 .search-wrap svg { position: absolute; left: 10px; pointer-events: none; opacity: .5; }
 
-.add-btn {
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 8px 14px; border-radius: 7px;
-  border: 1px solid rgba(239,162,59,.5); background: rgba(239,162,59,.12); color: var(--amber);
-  cursor: pointer; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
-  font-weight: 700; transition: all .15s ease;
-}
-.add-btn:hover { background: rgba(239,162,59,.22); transform: translateY(-1px); }
-
-/* ---------- SECTIONS / TABLE ---------- */
+/* ---------- SECTIONS / TABLE (READ-ONLY) ---------- */
 .section{margin-bottom:16px;}
 .section-head{
   display:flex; align-items:center; gap:10px; padding:8px 4px; cursor:pointer; user-select:none;
@@ -367,9 +319,8 @@ select option:hover, select option:focus, select option:checked {
 .card{
   background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
   border-radius:10px; padding:14px 16px; display:grid;
-  grid-template-columns:78px 56px 1fr 100px 190px 140px 30px;
+  grid-template-columns:78px 56px 1fr 100px 190px 140px;
   gap:14px; align-items:center; transition:border-color 0.15s ease;
-  will-change: transform;
 }
 .card:hover{border-color:var(--border);}
 .card.st-pending{border-left-color:var(--slate);}
@@ -377,61 +328,42 @@ select option:hover, select option:focus, select option:checked {
 .card.st-devdone{border-left-color:var(--blue);}
 .card.st-done{border-left-color:var(--emerald);}
 
-/* Card New Entry High-End Motion & Glow Animation */
-.card-new-entry {
-  animation: cardInsert 0.45s ease forwards;
-  box-shadow: 0 0 20px rgba(239, 162, 59, 0.35);
-  border-color: var(--amber) !important;
-}
-@keyframes cardInsert {
-  0% { opacity: 0; transform: translateY(-12px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 .c-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mid);font-weight:600;}
 .c-client{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-low);}
-.c-client span{color:var(--text-mid);}
+
 .c-title-wrap .title{
   font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--text-hi);
-  background:none;border:none;width:100%;padding:1px 0;font-family:'Space Grotesk',sans-serif;
+  margin:0; line-height: 1.3;
 }
-.c-title-wrap .title:focus{outline:none;border-bottom:1px solid var(--amber);}
 .c-title-wrap .desc{
-  font-size:12px; color:var(--text-mid); background:none;border:none;width:100%;margin-top:2px;
-  font-family:'Inter',sans-serif; padding:1px 0;
+  font-size:12px; color:var(--text-mid); font-family:'Inter',sans-serif; margin-top:3px;
 }
-.c-title-wrap .desc:focus{outline:none;border-bottom:1px solid var(--border);}
 
 .pill{
   font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase;
   letter-spacing:.05em; border-radius:6px; padding:5px 8px; text-align:center; border:1px solid transparent;
-  width:100%;
+  display: inline-block; width:100%;
 }
 .pill.high{background:var(--rose-dim);color:var(--rose);border-color:rgba(226,89,107,.4);}
 .pill.medium{background:var(--amber-dim);color:var(--amberline);border-color:rgba(224,169,58,.4);}
 .pill.low{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.4);}
 
-.c-dep input{
-  background:none;border:none;color:var(--text-mid); font-size:11.5px; width:100%;
-  font-family:'Inter',sans-serif; padding:1px 0;
+.c-dep{
+  font-size:11.5px; color:var(--text-mid); font-family:'Inter',sans-serif;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.c-dep input::placeholder{color:var(--text-low);}
-.c-dep input:focus{outline:none;border-bottom:1px solid var(--border);}
 
 .status-pill{
   font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; text-transform:uppercase;
-  border-radius:6px; padding:6px 8px; border:1px solid transparent; width:100%;
+  border-radius:6px; padding:6px 8px; border:1px solid transparent; text-align:center; display: inline-block; width:100%;
 }
 .status-pill.pending{background:var(--slate-dim);color:var(--slate);border-color:rgba(101,120,143,.4);}
 .status-pill.inprogress{background:var(--amber-dim);color:var(--amber);border-color:rgba(239,162,59,.4);}
 .status-pill.devdone{background:var(--blue-dim);color:var(--blue);border-color:rgba(79,157,224,.4);}
 .status-pill.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.4);}
 
-.c-del{background:none;border:none;color:var(--text-low);cursor:pointer;font-size:15px;padding:4px;border-radius:6px;}
-.c-del:hover{color:var(--rose);background:var(--rose-dim);}
-
 .col-labels{
-  display:grid; grid-template-columns:78px 56px 1fr 100px 190px 140px 30px; gap:14px;
+  display:grid; grid-template-columns:78px 56px 1fr 100px 190px 140px; gap:14px;
   padding:0 16px; margin-bottom:6px;
 }
 .col-labels span{
@@ -461,53 +393,19 @@ select option:hover, select option:focus, select option:checked {
 }
 .footer-note span{color:var(--amber);}
 
-/* ---------- ULTRA LIGHTWEIGHT & FAST MODAL ---------- */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(8, 14, 23, 0.88);
-  z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0;
-  pointer-events: none; transition: opacity 0.18s ease;
-  will-change: opacity;
-}
-.modal-overlay.open { opacity: 1; pointer-events: auto; }
-
-.modal-card {
-  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-  width: 90%; max-width: 520px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-  transform: translateY(14px) scale(0.97); opacity: 0;
-  transition: transform 0.18s ease, opacity 0.18s ease;
-  will-change: transform, opacity;
-}
-.modal-overlay.open .modal-card {
-  transform: translateY(0) scale(1); opacity: 1;
-}
-
-.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-.modal-head h3 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; margin: 0; color: var(--text-hi); }
-.modal-close { background: none; border: none; color: var(--text-mid); font-size: 20px; cursor: pointer; transition: color 0.15s ease; }
-.modal-close:hover { color: var(--rose); }
-.form-group { margin-bottom: 14px; }
-.form-group label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mid); text-transform: uppercase; margin-bottom: 6px; }
-.form-group input, .form-group select { width: 100%; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text-hi); font-family: 'Inter', sans-serif; font-size: 13px; transition: border-color 0.15s ease; }
-.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--amber); }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
-.btn-primary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: var(--amber); color: var(--bg); border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: all 0.15s ease; }
-.btn-primary:hover { background: #f5b352; }
-.btn-secondary { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 9px 18px; border-radius: 7px; background: transparent; color: var(--text-mid); border: 1px solid var(--border); cursor: pointer; text-transform: uppercase; transition: all 0.15s ease; }
-.btn-secondary:hover { color: var(--text-hi); border-color: var(--text-low); }
-
 /* ---------- RESPONSIVE DESIGN ---------- */
 @media(max-width: 1200px) {
   .toolbar-container { flex-direction: column; align-items: stretch; }
   .toolbar-left { width: 100%; justify-content: space-between; }
   .toolbar-right { width: 100%; margin-top: 6px; }
-  .search-wrap { flex: 1; }
+  .search-wrap { width: 100%; }
   .search-wrap input { width: 100% !important; }
 }
 
 @media(max-width: 900px){
   .kpis{grid-template-columns:repeat(2,1fr);}
   .kpi.overall{grid-column:span 2;}
-  .card{grid-template-columns:1fr; grid-template-areas:none; gap: 8px;}
+  .card{grid-template-columns:1fr; gap: 8px;}
   .col-labels{display:none;}
 }
 
@@ -515,8 +413,6 @@ select option:hover, select option:focus, select option:checked {
   .filter-tabs { width: 100%; }
   .filter-dropdowns { width: 100%; justify-content: space-between; }
   .filter-select { flex: 1; min-width: 100px; font-size: 10px; }
-  .toolbar-right { flex-direction: column; align-items: stretch; }
-  .add-btn { text-align: center; width: 100%; }
 }
 </style>
 </head>
@@ -548,16 +444,10 @@ select option:hover, select option:focus, select option:checked {
         <p class="eyebrow">Delivery Control</p>
         <h1>Enterprise Data &amp; Integration Build</h1>
         <div class="sub">
-          Client: <input id="clientName" value="—" /> · <span id="totalFeatureCount">0</span> features · 3-week delivery window · <span id="lastUpdated"></span>
+          Live Tracking Board · <span id="totalFeatureCount">0</span> features · <span id="lastUpdated"></span>
           <div id="syncBadge" class="sync-badge" style="display:none;"><span class="spinner-icon"></span> Syncing with Sheet...</div>
         </div>
       </div>
-    </div>
-    <div class="week-picker">
-      <span>Reporting</span>
-      <button class="week-btn" data-week="1">Week 1</button>
-      <button class="week-btn" data-week="2">Week 2</button>
-      <button class="week-btn" data-week="3">Week 3</button>
     </div>
   </div>
 
@@ -624,69 +514,17 @@ select option:hover, select option:focus, select option:checked {
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8FA1B8" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="search" placeholder="Search features…" />
       </div>
-      <button class="add-btn" id="addBtn">+ Add feature</button>
     </div>
   </div>
 
   <div class="col-labels">
-    <span>Task ID</span><span>Client</span><span>Title &amp; description</span><span>Complexity</span><span>Dependencies</span><span>Status</span><span></span>
+    <span>Task ID</span><span>Client</span><span>Title &amp; description</span><span>Complexity</span><span>Dependencies</span><span>Status</span>
   </div>
 
   <div id="sections"></div>
 
-  <div class="footer-note">Edits save automatically to this dashboard · click any field to edit · <span id="genNote"></span></div>
+  <div class="footer-note">Read-only delivery dashboard · synchronized with Google Sheet · <span id="genNote"></span></div>
 
-</div>
-
-<!-- Add Feature Modal Form -->
-<div class="modal-overlay" id="addFeatureModal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3>Add New Feature</h3>
-      <button class="modal-close" id="closeAddModalBtn">&times;</button>
-    </div>
-    <div class="form-group">
-      <label for="addTitle">Feature Title *</label>
-      <input id="addTitle" placeholder="e.g. Real-Time Analytics Pipeline" required />
-    </div>
-    <div class="form-group">
-      <label for="addDesc">Description</label>
-      <input id="addDesc" placeholder="e.g. Stream processing with Kafka / Redis" />
-    </div>
-    <div style="display:flex; gap:12px;">
-      <div class="form-group" style="flex:1;">
-        <label for="addClient">Client Q#</label>
-        <input id="addClient" placeholder="e.g. Q38 or —" value="—" />
-      </div>
-      <div class="form-group" style="flex:1;">
-        <label for="addComplexity">Complexity</label>
-        <select id="addComplexity">
-          <option value="high">High</option>
-          <option value="medium" selected>Medium</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex; gap:12px;">
-      <div class="form-group" style="flex:1;">
-        <label for="addDeps">Dependencies</label>
-        <input id="addDeps" placeholder="e.g. Kafka sandbox credentials" value="None" />
-      </div>
-      <div class="form-group" style="flex:1;">
-        <label for="addStatus">Status</label>
-        <select id="addStatus">
-          <option value="pending" selected>Pending</option>
-          <option value="inprogress">In Progress</option>
-          <option value="devdone">Dev-Done</option>
-          <option value="done">Done</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" id="cancelAddBtn">Cancel</button>
-      <button class="btn-primary" id="saveAddBtn">+ Save &amp; Sync to Sheet</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -743,7 +581,7 @@ if (window.XMLHttpRequest) {
 }
 
 // =========================================================================
-// GOOGLE WORKSHEET CONFIGURATION & SYNC SYSTEM
+// GOOGLE WORKSHEET READ-ONLY CONFIGURATION
 // =========================================================================
 const SPREADSHEET_ID = ''; 
 const SHEET_TAB_NAME = 'Task Tracker';
@@ -756,8 +594,6 @@ const STATUS_LABEL = {pending:'Pending', inprogress:'In Progress', devdone:'Dev-
 const STATUS_DOT = {pending:'var(--slate)', inprogress:'var(--amber)', devdone:'var(--blue)', done:'var(--emerald)'};
 
 let state = {
-  clientName: '—',
-  week: 1,
   tasks: []
 };
 
@@ -768,53 +604,6 @@ let activeSortOrder = 'id-asc';
 
 let collapsedSections = {};
 let visibleLimits = { pending: PAGE_SIZE, inprogress: PAGE_SIZE, devdone: PAGE_SIZE, done: PAGE_SIZE };
-let newlyAddedId = null;
-
-const STORE_KEY = 'delivery-board-state';
-const DELETED_KEY = 'delivery-board-deleted-ids';
-const MODIFIED_KEY = 'delivery-board-modified-tasks';
-
-// ---------- PERSISTENCE & DELETION TRACKING ----------
-function getItem(key) {
-  try { return localStorage.getItem(key); } catch(e){ return null; }
-}
-function setItem(key, val) {
-  try { localStorage.setItem(key, val); } catch(e){}
-}
-
-function getDeletedTaskIds() {
-  try {
-    const raw = localStorage.getItem(DELETED_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e) { return []; }
-}
-
-function addDeletedTaskId(id) {
-  const ids = getDeletedTaskIds();
-  if (!ids.includes(id)) {
-    ids.push(id);
-    try { localStorage.setItem(DELETED_KEY, JSON.stringify(ids)); } catch(e){}
-  }
-}
-
-function getModifiedTasks() {
-  try {
-    const raw = localStorage.getItem(MODIFIED_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch(e) { return {}; }
-}
-
-function setModifiedTask(task) {
-  const mods = getModifiedTasks();
-  mods[task.id] = task;
-  try { localStorage.setItem(MODIFIED_KEY, JSON.stringify(mods)); } catch(e){}
-}
-
-function removeModifiedTask(id) {
-  const mods = getModifiedTasks();
-  delete mods[id];
-  try { localStorage.setItem(MODIFIED_KEY, JSON.stringify(mods)); } catch(e){}
-}
 
 function getActiveSheetId() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -962,7 +751,7 @@ function parse2DArrayTasks(rows) {
       desc = parts.slice(1).join(':').trim();
     }
 
-    // STRICT PLACEHOLDER FILTERING: Filter out empty/dummy placeholder tasks (e.g. "New feature: Click to edit description")
+    // STRICT PLACEHOLDER FILTERING: Filter out empty/dummy placeholder tasks
     const lowerTitle = title.toLowerCase().trim();
     const lowerRaw = rawTitleDesc.toLowerCase().trim();
     if (!lowerTitle || 
@@ -994,134 +783,17 @@ function parse2DArrayTasks(rows) {
     });
   }
 
-  // 1. FILTER OUT DELETED TASK IDs (Ensures deleted tasks NEVER reappear on refresh)
-  const deletedIds = getDeletedTaskIds();
-  let cleanTasks = parsedTasks.filter(t => !deletedIds.includes(t.id));
-
-  // 2. APPLY LOCAL MODIFICATIONS OVER LIVE DATA
-  const modifiedMap = getModifiedTasks();
-  cleanTasks = cleanTasks.map(t => modifiedMap[t.id] ? { ...t, ...modifiedMap[t.id] } : t);
-
-  return cleanTasks;
-}
-
-// Sync Add / Edit / Delete directly to Google Sheet via Apps Script Endpoint
-async function syncToSheet(payload) {
-  const scriptUrl = getActiveScriptUrl();
-  if (!scriptUrl) return;
-
-  showLoading(true);
-  try {
-    await _secureFetch(scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    console.error("Failed to sync action to Google Sheet:", err);
-  } finally {
-    showLoading(false);
-  }
-}
-
-async function appendTaskToSheet(task) {
-  const titleDesc = task.title + (task.desc ? ': ' + task.desc : '');
-  const complexityLabel = (task.complexity || 'medium').charAt(0).toUpperCase() + (task.complexity || 'medium').slice(1);
-  const statusMap = { done:'Done', devdone:'Dev-Done', inprogress:'In-Progress', pending:'Pending' };
-  const statusLabel = statusMap[task.status] || 'Pending';
-
-  await syncToSheet({
-    action: 'add',
-    row: [
-      task.id,
-      task.client || '—',
-      titleDesc,
-      complexityLabel,
-      task.deps || 'None',
-      statusLabel
-    ],
-    id: task.id,
-    client: task.client || '—',
-    title: task.title,
-    desc: task.desc,
-    complexity: complexityLabel,
-    deps: task.deps || 'None',
-    status: statusLabel
-  });
-}
-
-async function syncDeleteToSheet(taskId) {
-  await syncToSheet({
-    action: 'delete',
-    id: taskId
-  });
-}
-
-async function syncUpdateToSheet(task) {
-  const titleDesc = task.title + (task.desc ? ': ' + task.desc : '');
-  const complexityLabel = (task.complexity || 'medium').charAt(0).toUpperCase() + (task.complexity || 'medium').slice(1);
-  const statusMap = { done:'Done', devdone:'Dev-Done', inprogress:'In-Progress', pending:'Pending' };
-  const statusLabel = statusMap[task.status] || 'Pending';
-
-  await syncToSheet({
-    action: 'update',
-    id: task.id,
-    client: task.client || '—',
-    title: task.title,
-    desc: task.desc,
-    titleDesc: titleDesc,
-    complexity: complexityLabel,
-    deps: task.deps || 'None',
-    status: statusLabel
-  });
-}
-
-function getNextTaskId() {
-  let maxNum = 0;
-  state.tasks.forEach(t => {
-    const match = (t.id || '').match(/TASK-(\d+)/i);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (num > maxNum) maxNum = num;
-    }
-  });
-  return 'TASK-' + String(maxNum + 1).padStart(2, '0');
+  return parsedTasks;
 }
 
 async function loadState(){
   renderSkeletons();
-  
   const liveTasks = await fetchWorksheetData();
   if (liveTasks && liveTasks.length > 0) {
     state.tasks = liveTasks;
-  } else {
-    const savedState = getItem(STORE_KEY);
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        if (parsed && Array.isArray(parsed.tasks)) {
-          const deletedIds = getDeletedTaskIds();
-          state.tasks = parsed.tasks.filter(t => {
-            if (deletedIds.includes(t.id)) return false;
-            const raw = ((t.title || '') + (t.desc || '')).toLowerCase();
-            return !raw.includes('click to edit') && !raw.includes('test (dashboard building)');
-          });
-        }
-      } catch(e){}
-    }
   }
-
   updateClientFilterOptions();
   render();
-}
-
-let saveTimer = null;
-function saveState(){
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(()=>{
-    setItem(STORE_KEY, JSON.stringify(state));
-  }, 300);
 }
 
 function counts(){
@@ -1160,10 +832,6 @@ function updateClientFilterOptions() {
 }
 
 function render(){
-  document.getElementById('clientName').value = state.clientName;
-  document.querySelectorAll('.week-btn').forEach(b=>{
-    b.classList.toggle('active', Number(b.dataset.week)===state.week);
-  });
   document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'});
   document.getElementById('genNote').textContent = 'AFA Intellisoft delivery board';
 
@@ -1196,7 +864,6 @@ function render(){
   });
 
   renderSections();
-  saveState();
 }
 
 function matchesFilter(t){
@@ -1298,86 +965,23 @@ function buildCard(t){
   card.className = 'card st-' + t.status;
   card.id = 'row-' + t.id;
 
-  if (t.id === newlyAddedId) {
-    card.classList.add('card-new-entry');
-    setTimeout(() => {
-      card.classList.remove('card-new-entry');
-      if (newlyAddedId === t.id) newlyAddedId = null;
-    }, 1800);
-  }
-
   const displayClient = (t.client && t.client !== '—') 
     ? (t.client.startsWith('Q') || t.client.startsWith('#') ? escapeAttr(t.client) : '#' + escapeAttr(t.client)) 
     : '—';
+
+  const complexityDisplay = (t.complexity || 'medium').toUpperCase();
 
   card.innerHTML = `
     <div class="c-id">${t.id}</div>
     <div class="c-client">${displayClient}</div>
     <div class="c-title-wrap">
-      <input class="title" value="${escapeAttr(t.title)}" />
-      <input class="desc" value="${escapeAttr(t.desc)}" />
+      <h5 class="title">${escapeAttr(t.title)}</h5>
+      ${t.desc ? `<p class="desc">${escapeAttr(t.desc)}</p>` : ''}
     </div>
-    <select class="pill ${t.complexity}">
-      <option value="high" ${t.complexity==='high'?'selected':''}>High</option>
-      <option value="medium" ${t.complexity==='medium'?'selected':''}>Medium</option>
-      <option value="low" ${t.complexity==='low'?'selected':''}>Low</option>
-    </select>
-    <div class="c-dep"><input value="${escapeAttr(t.deps)}" placeholder="None" /></div>
-    <select class="status-pill ${t.status}">
-      <option value="pending" ${t.status==='pending'?'selected':''}>Pending</option>
-      <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
-      <option value="devdone" ${t.status==='devdone'?'selected':''}>Dev-Done</option>
-      <option value="done" ${t.status==='done'?'selected':''}>Done</option>
-    </select>
-    <button class="c-del" title="Remove feature">✕</button>
+    <div><span class="pill ${t.complexity}">${complexityDisplay}</span></div>
+    <div class="c-dep">${escapeAttr(t.deps)}</div>
+    <div><span class="status-pill ${t.status}">${STATUS_LABEL[t.status] || t.status}</span></div>
   `;
-
-  // REAL-TIME EDIT LISTENERS (Saves modification & syncs)
-  card.querySelector('.title').addEventListener('input', e=>{
-    t.title = e.target.value;
-    setModifiedTask(t);
-    saveState();
-    syncUpdateToSheet(t);
-    const led = document.querySelector(`.led[data-id="${t.id}"]`);
-    if (led) led.title = `${t.id} — ${t.title} (${STATUS_LABEL[t.status]})`;
-  });
-  card.querySelector('.desc').addEventListener('input', e=>{
-    t.desc = e.target.value;
-    setModifiedTask(t);
-    saveState();
-    syncUpdateToSheet(t);
-  });
-  card.querySelector('.c-dep input').addEventListener('input', e=>{
-    t.deps = e.target.value;
-    setModifiedTask(t);
-    saveState();
-    syncUpdateToSheet(t);
-  });
-  card.querySelector('.pill').addEventListener('change', e=>{
-    t.complexity = e.target.value;
-    e.target.className = 'pill ' + t.complexity;
-    setModifiedTask(t);
-    saveState();
-    syncUpdateToSheet(t);
-  });
-  card.querySelector('.status-pill').addEventListener('change', e=>{
-    t.status = e.target.value;
-    setModifiedTask(t);
-    render();
-    syncUpdateToSheet(t);
-  });
-
-  // REAL-TIME DELETE LISTENER (Removes permanently and syncs deletion)
-  card.querySelector('.c-del').addEventListener('click', ()=>{
-    if(confirm('Remove ' + t.id + ' — ' + t.title + '?')){
-      addDeletedTaskId(t.id); // Remember permanent deletion
-      removeModifiedTask(t.id);
-      state.tasks = state.tasks.filter(x=>x!==t);
-      updateClientFilterOptions();
-      render();
-      syncDeleteToSheet(t.id); // Send delete action to Sheet
-    }
-  });
 
   return card;
 }
@@ -1385,12 +989,6 @@ function buildCard(t){
 function escapeAttr(s){
   return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 }
-
-document.getElementById('clientName').addEventListener('input', e=>{ state.clientName = e.target.value; saveState(); });
-
-document.querySelectorAll('.week-btn').forEach(b=>{
-  b.addEventListener('click', ()=>{ state.week = Number(b.dataset.week); render(); });
-});
 
 document.querySelectorAll('.filter-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -1420,68 +1018,6 @@ let searchDebounceTimer;
 document.getElementById('search').addEventListener('input', ()=>{
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(renderSections, 150);
-});
-
-// Modal Add Feature Handlers
-const addFeatureModal = document.getElementById('addFeatureModal');
-const addTitle = document.getElementById('addTitle');
-const addDesc = document.getElementById('addDesc');
-const addClient = document.getElementById('addClient');
-const addComplexity = document.getElementById('addComplexity');
-const addDeps = document.getElementById('addDeps');
-const addStatus = document.getElementById('addStatus');
-
-document.getElementById('addBtn').addEventListener('click', ()=>{
-  addTitle.value = '';
-  addDesc.value = '';
-  addClient.value = '—';
-  addComplexity.value = 'medium';
-  addDeps.value = 'None';
-  addStatus.value = 'pending';
-  addFeatureModal.classList.add('open');
-  requestAnimationFrame(() => addTitle.focus());
-});
-
-document.getElementById('closeAddModalBtn').addEventListener('click', ()=>{
-  addFeatureModal.classList.remove('open');
-});
-
-document.getElementById('cancelAddBtn').addEventListener('click', ()=>{
-  addFeatureModal.classList.remove('open');
-});
-
-document.getElementById('saveAddBtn').addEventListener('click', ()=>{
-  const titleVal = addTitle.value.trim();
-  if (!titleVal) {
-    alert("Please enter a Feature Title");
-    addTitle.focus();
-    return;
-  }
-
-  const newId = getNextTaskId();
-  const newTask = {
-    id: newId,
-    client: addClient.value.trim() || '—',
-    title: titleVal,
-    desc: addDesc.value.trim(),
-    complexity: addComplexity.value,
-    deps: addDeps.value.trim() || 'None',
-    status: addStatus.value
-  };
-
-  newlyAddedId = newTask.id;
-  state.tasks.push(newTask);
-  visibleLimits[newTask.status] = (visibleLimits[newTask.status] || PAGE_SIZE) + 1;
-  addFeatureModal.classList.remove('open');
-
-  updateClientFilterOptions();
-  render();
-  appendTaskToSheet(newTask);
-
-  setTimeout(()=>{
-    const el = document.getElementById('row-' + newTask.id);
-    if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); }
-  }, 50);
 });
 
 loadState();

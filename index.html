@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Delivery Control — Enterprise Build</title>
+<title>DAISY A&amp;M Feature Development — Delivery Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- High-End Cybernetic Favicon -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A111B'/%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='6.5' fill='none' stroke='%23EFA23B' stroke-width='1.5' opacity='0.8'/%3E%3Cpath d='M8 16l5 5 11-11' fill='none' stroke='%2333C481' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='23' cy='23' r='2.5' fill='%23EFA23B'/%3E%3C/svg%3E">
@@ -182,6 +182,21 @@ body{
 }
 .brand-text .sub{
   font-size:13px; color:var(--text-mid); margin-top:4px; display:flex; align-items:center; flex-wrap:wrap;
+}
+
+.action-tools {
+  display: flex; gap: 8px; align-items: center;
+}
+.tool-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+  padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--text-mid); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s ease;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.tool-btn:hover {
+  background: var(--bg-2); color: var(--amber); border-color: rgba(239,162,59,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
 
 /* ---------- KPI ROW ---------- */
@@ -371,6 +386,21 @@ select option {
   text-transform:uppercase;letter-spacing:.09em;
 }
 
+/* ---------- EMPTY STATE ---------- */
+.empty-state {
+  text-align: center; padding: 48px 20px; background: var(--panel); border: 1px dashed var(--border);
+  border-radius: 12px; margin: 20px 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.empty-state svg { margin-bottom: 12px; opacity: 0.6; }
+.empty-state h4 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: var(--text-hi); margin: 0 0 6px; }
+.empty-state p { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-mid); margin: 0 0 16px; }
+.reset-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 8px 16px; border-radius: 7px;
+  background: var(--bg-2); border: 1px solid var(--amber); color: var(--amber); cursor: pointer;
+  text-transform: uppercase; font-weight: 700; transition: all 0.15s ease;
+}
+.reset-btn:hover { background: rgba(239,162,59,0.15); }
+
 /* ---------- VIEW MORE PAGINATION ---------- */
 .view-more-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -413,6 +443,7 @@ select option {
   .filter-tabs { width: 100%; }
   .filter-dropdowns { width: 100%; justify-content: space-between; }
   .filter-select { flex: 1; min-width: 100px; font-size: 10px; }
+  .action-tools { width: 100%; justify-content: flex-start; }
 }
 </style>
 </head>
@@ -442,12 +473,22 @@ select option {
       <div class="pulse"></div>
       <div class="brand-text">
         <p class="eyebrow">Delivery Control</p>
-        <h1>Enterprise Data &amp; Integration Build</h1>
+        <h1>DAISY A&amp;M Feature Development</h1>
         <div class="sub">
           Live Tracking Board · <span id="totalFeatureCount">0</span> features · <span id="lastUpdated"></span>
           <div id="syncBadge" class="sync-badge" style="display:none;"><span class="spinner-icon"></span> Syncing with Sheet...</div>
         </div>
       </div>
+    </div>
+    <div class="action-tools">
+      <button class="tool-btn" id="refreshBtn" title="Sync live data with Google Sheet">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Sync Now
+      </button>
+      <button class="tool-btn" id="exportBtn" title="Export features report to CSV">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Export CSV
+      </button>
     </div>
   </div>
 
@@ -834,7 +875,7 @@ function updateClientFilterOptions() {
 }
 
 function render(){
-  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
   document.getElementById('genNote').textContent = 'AFA Intellisoft delivery board';
 
   const c = counts();
@@ -912,13 +953,17 @@ function renderSections(){
   const container = document.getElementById('sections');
   container.innerHTML = '';
 
+  let totalRendered = 0;
+
   STATUS_ORDER.forEach(statusKey=>{
     let items = state.tasks.filter(t=> t.status===statusKey && matchesFilter(t));
     items = sortTasks(items);
 
     const allInStatus = state.tasks.filter(t=>t.status===statusKey);
     if(activeStatusFilter !== 'all' && activeStatusFilter !== statusKey) return;
-    if(document.getElementById('search').value.trim() && items.length===0) return;
+    if(items.length === 0) return;
+
+    totalRendered += items.length;
 
     const limit = visibleLimits[statusKey] || PAGE_SIZE;
     const visibleItems = items.slice(0, limit);
@@ -960,6 +1005,28 @@ function renderSections(){
     section.appendChild(cards);
     container.appendChild(section);
   });
+
+  if (totalRendered === 0) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = `
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EFA23B" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      <h4>No Matching Features Found</h4>
+      <p>No task matches your current search criteria or active filters.</p>
+      <button class="reset-btn" id="resetFiltersBtn">Reset Filters</button>
+    `;
+    container.appendChild(emptyState);
+    document.getElementById('resetFiltersBtn').addEventListener('click', ()=>{
+      activeStatusFilter = 'all';
+      activeComplexityFilter = 'all';
+      activeClientFilter = 'all';
+      document.getElementById('search').value = '';
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+      document.getElementById('filterComplexity').value = 'all';
+      document.getElementById('filterClient').value = 'all';
+      renderSections();
+    });
+  }
 }
 
 function buildCard(t){
@@ -1021,6 +1088,48 @@ document.getElementById('search').addEventListener('input', ()=>{
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(renderSections, 150);
 });
+
+// Refresh Sync Now Button Handler
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  const icon = document.querySelector('#refreshBtn svg');
+  if (icon) icon.style.animation = 'spin 0.8s linear infinite';
+  await loadState();
+  if (icon) icon.style.animation = 'none';
+});
+
+// Export CSV Handler
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const headers = ['Task ID', 'Client', 'Title', 'Description', 'Complexity', 'Dependencies', 'Status'];
+  const rows = state.tasks.map(t => [
+    `"${t.id}"`,
+    `"${t.client || ''}"`,
+    `"${(t.title || '').replace(/"/g, '""')}"`,
+    `"${(t.desc || '').replace(/"/g, '""')}"`,
+    `"${t.complexity || ''}"`,
+    `"${(t.deps || '').replace(/"/g, '""')}"`,
+    `"${t.status || ''}"`
+  ]);
+
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `Task_Tracker_Delivery_Report_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+// Auto Background Refresh every 60 seconds
+setInterval(() => {
+  fetchWorksheetData().then(liveTasks => {
+    if (liveTasks && liveTasks.length > 0) {
+      state.tasks = liveTasks;
+      updateClientFilterOptions();
+      render();
+    }
+  });
+}, 60000);
 
 loadState();
 </script>

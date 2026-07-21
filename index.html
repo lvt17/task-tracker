@@ -50,7 +50,7 @@ body{
 }
 .wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:28px 24px 80px;}
 
-/* ---------- LOADING INDICATOR ---------- */
+/* ---------- LOADING INDICATORS ---------- */
 .loading-bar {
   position: fixed; top: 0; left: 0; right: 0; height: 3px;
   background: linear-gradient(90deg, var(--amber), var(--emerald), var(--blue));
@@ -62,6 +62,38 @@ body{
 @keyframes loadingAnim {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
+}
+
+.sync-badge {
+  display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--amber); background: rgba(239,162,59,0.12); border: 1px solid rgba(239,162,59,0.3);
+  padding: 3px 8px; border-radius: 20px; text-transform: uppercase; margin-left: 8px;
+}
+.spinner-icon {
+  width: 9px; height: 9px; border: 2px solid var(--amber); border-top-color: transparent;
+  border-radius: 50%; animation: spin 0.8s infinite linear;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Skeleton Loading Shimmer Effect */
+.skeleton-container { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.skeleton-card {
+  background: var(--panel); border: 1px solid var(--border-soft); border-radius: 10px;
+  padding: 16px; display: grid; grid-template-columns: 78px 56px 1fr 100px 190px 140px;
+  gap: 14px; align-items: center; opacity: 0.8;
+}
+.skeleton-line {
+  background: linear-gradient(90deg, #162234 25%, #223148 50%, #162234 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 4px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* ---------- HEADER ---------- */
@@ -90,7 +122,7 @@ body{
   margin:0; letter-spacing:-0.01em; color:var(--text-hi);
 }
 .brand-text .sub{
-  font-size:13px; color:var(--text-mid); margin-top:4px;
+  font-size:13px; color:var(--text-mid); margin-top:4px; display:flex; align-items:center; flex-wrap:wrap;
 }
 .sub input{
   background:none;border:none;color:var(--text-mid);font-size:13px;font-family:'Inter',sans-serif;
@@ -392,7 +424,10 @@ body{
       <div class="brand-text">
         <p class="eyebrow">Delivery Control</p>
         <h1>Enterprise Data &amp; Integration Build</h1>
-        <div class="sub">Client: <input id="clientName" value="—" /> · <span id="totalFeatureCount">0</span> features · 3-week delivery window · <span id="lastUpdated"></span></div>
+        <div class="sub">
+          Client: <input id="clientName" value="—" /> · <span id="totalFeatureCount">0</span> features · 3-week delivery window · <span id="lastUpdated"></span>
+          <div id="syncBadge" class="sync-badge" style="display:none;"><span class="spinner-icon"></span> Syncing with Sheet...</div>
+        </div>
       </div>
     </div>
     <div class="week-picker">
@@ -580,14 +615,40 @@ function getActiveScriptUrl() {
 }
 
 function showLoading(show) {
-  const el = document.getElementById('loadingBar');
-  if (el) el.style.display = show ? 'block' : 'none';
+  const bar = document.getElementById('loadingBar');
+  const badge = document.getElementById('syncBadge');
+  if (bar) bar.style.display = show ? 'block' : 'none';
+  if (badge) badge.style.display = show ? 'inline-flex' : 'none';
+}
+
+function renderSkeletons() {
+  const container = document.getElementById('sections');
+  if (!container) return;
+  let html = '<div class="skeleton-container">';
+  for (let i = 0; i < 4; i++) {
+    html += `
+      <div class="skeleton-card">
+        <div class="skeleton-line" style="width:50px; height:14px;"></div>
+        <div class="skeleton-line" style="width:35px; height:14px;"></div>
+        <div class="skeleton-line" style="width:80%; height:16px;"></div>
+        <div class="skeleton-line" style="width:70px; height:20px;"></div>
+        <div class="skeleton-line" style="width:120px; height:14px;"></div>
+        <div class="skeleton-line" style="width:90px; height:20px;"></div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // Fetch Data directly from Apps Script Web App (doGet) or Google Sheet GViz API
 async function fetchWorksheetData() {
   const scriptUrl = getActiveScriptUrl();
   const sheetId = getActiveSheetId();
+  
+  if (state.tasks.length === 0) {
+    renderSkeletons();
+  }
   showLoading(true);
 
   try {

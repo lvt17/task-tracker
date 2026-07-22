@@ -887,8 +887,68 @@ function render(){
     led.title = t.id + ' — ' + t.title + ' (' + STATUS_LABEL[t.status] + ')';
     led.textContent = t.id.replace('TASK-','');
     led.addEventListener('click', ()=>{
-      const el = document.getElementById('row-'+t.id);
-      if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.style.borderColor = 'var(--amber)'; setTimeout(()=> el.style.borderColor='', 900); }
+      let needsRerender = false;
+      
+      // If status filter is active and doesn't match task status, reset to 'all'
+      if (activeStatusFilter !== 'all' && activeStatusFilter !== t.status) {
+        activeStatusFilter = 'all';
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.filter === 'all');
+        });
+        needsRerender = true;
+      }
+      
+      // If complexity filter is active and doesn't match, reset to 'all'
+      if (activeComplexityFilter !== 'all' && activeComplexityFilter !== t.complexity) {
+        activeComplexityFilter = 'all';
+        document.getElementById('filterComplexity').value = 'all';
+        needsRerender = true;
+      }
+      
+      // If task (client) filter is active and doesn't match, reset to 'all'
+      if (activeClientFilter !== 'all' && activeClientFilter !== t.client) {
+        activeClientFilter = 'all';
+        document.getElementById('filterClient').value = 'all';
+        needsRerender = true;
+      }
+      
+      // If search query exists and the task doesn't match it, clear search
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      if (q && !(
+        (t.title || '').toLowerCase().includes(q) ||
+        (t.desc || '').toLowerCase().includes(q) ||
+        (t.id || '').toLowerCase().includes(q) ||
+        (t.client || '').toLowerCase().includes(q) ||
+        (t.deps || '').toLowerCase().includes(q)
+      )) {
+        document.getElementById('search').value = '';
+        needsRerender = true;
+      }
+      
+      // Calculate index of task under the updated filter state
+      let items = state.tasks.filter(x => x.status === t.status && matchesFilter(x));
+      items = sortTasks(items);
+      const idx = items.findIndex(x => x.id === t.id);
+      
+      const currentLimit = visibleLimits[t.status] || PAGE_SIZE;
+      if (idx >= currentLimit) {
+        visibleLimits[t.status] = Math.ceil((idx + 1) / PAGE_SIZE) * PAGE_SIZE;
+        needsRerender = true;
+      }
+      
+      if (needsRerender) {
+        renderSections();
+      }
+      
+      // Highlight and scroll to target task card
+      setTimeout(() => {
+        const el = document.getElementById('row-' + t.id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.borderColor = 'var(--amber)';
+          setTimeout(() => el.style.borderColor = '', 1500);
+        }
+      }, 50);
     });
     strip.appendChild(led);
   });
@@ -1083,6 +1143,8 @@ document.getElementById('refreshBtn').addEventListener('click', async () => {
   await loadState();
   if (icon) icon.style.animation = 'none';
 });
+
+
 
 // Auto Background Refresh every 60 seconds
 setInterval(() => {

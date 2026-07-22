@@ -201,7 +201,7 @@ body{
 
 /* ---------- KPI ROW ---------- */
 .kpis{
-  display:grid; grid-template-columns:1.3fr repeat(4,1fr); gap:12px; margin-bottom:14px;
+  display:grid; grid-template-columns:1.3fr repeat(5,1fr); gap:12px; margin-bottom:14px;
 }
 .kpi{
   background:var(--panel); border:1px solid var(--border); border-radius:12px;
@@ -497,6 +497,7 @@ select option {
     <div class="kpi pending"><div class="n" id="kpiPending">0</div><div class="l">Pending</div></div>
     <div class="kpi progress"><div class="n" id="kpiProgress">0</div><div class="l">In progress</div></div>
     <div class="kpi staged"><div class="n" id="kpiStaged">0</div><div class="l">Dev-done</div></div>
+    <div class="kpi done"><div class="n" id="kpiDone">0</div><div class="l">Done</div></div>
   </div>
 
   <div class="strip-card">
@@ -874,6 +875,7 @@ function render(){
   document.getElementById('kpiPending').textContent = c.pending;
   document.getElementById('kpiProgress').textContent = c.inprogress;
   document.getElementById('kpiStaged').textContent = c.devdone;
+  document.getElementById('kpiDone').textContent = c.done;
 
   // signal strip
   const strip = document.getElementById('strip');

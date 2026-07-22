@@ -535,13 +535,13 @@ select option {
         </select>
 
         <select class="filter-select" id="filterClient">
-          <option value="all">Client: All</option>
+          <option value="all">Task: All</option>
         </select>
 
         <select class="filter-select" id="sortOrder">
           <option value="id-asc">Sort: ID (Default)</option>
           <option value="complexity-desc">Sort: Complexity (High → Low)</option>
-          <option value="client-asc">Sort: Client Q#</option>
+          <option value="client-asc">Sort: Task Q#</option>
           <option value="title-asc">Sort: Title (A-Z)</option>
         </select>
       </div>
@@ -556,7 +556,7 @@ select option {
   </div>
 
   <div class="col-labels">
-    <span>Task ID</span><span>Client</span><span>Title &amp; description</span><span>Complexity</span><span>Dependencies</span><span>Status</span>
+    <span>Task ID</span><span>Task</span><span>Title &amp; description</span><span>Complexity</span><span>Dependencies</span><span>Status</span>
   </div>
 
   <div id="sections"></div>
@@ -847,10 +847,10 @@ function updateClientFilterOptions() {
     a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
   );
 
-  let html = '<option value="all">Client: All</option>';
+  let html = '<option value="all">Task: All</option>';
   sortedClients.forEach(c => {
     const label = c.startsWith('Q') || c.startsWith('#') ? c : '#' + c;
-    html += `<option value="${escapeAttr(c)}">Client: ${escapeAttr(label)}</option>`;
+    html += `<option value="${escapeAttr(c)}">Task: ${escapeAttr(label)}</option>`;
   });
   select.innerHTML = html;
   if (sortedClients.includes(currentVal)) {

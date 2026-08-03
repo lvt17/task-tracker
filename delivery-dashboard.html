@@ -636,8 +636,35 @@ const STATUS_ORDER = ['pending','inprogress','devdone','done'];
 const STATUS_LABEL = {pending:'Pending', inprogress:'In Progress', devdone:'Dev-Done', done:'Done'};
 const STATUS_DOT = {pending:'var(--slate)', inprogress:'var(--amber)', devdone:'var(--blue)', done:'var(--emerald)'};
 
+const FALLBACK_TASKS = [
+  { id: "TASK-01", client: "Q2", title: "Fuzzy Duplicate Matching", desc: "Cross-field matching via rapidfuzz / recordlinkage", complexity: "high", deps: "None", status: "done", owner: "Shaheryar" },
+  { id: "TASK-02", client: "Q3", title: "Multi-System Source Reconciliation", desc: "Aligning ERP/CRM schemas", complexity: "high", deps: "Sample schemas", status: "devdone", owner: "Tran" },
+  { id: "TASK-03", client: "Q4", title: "Hierarchy-Aware Matching", desc: "Parent-child relationship checks in validation", complexity: "high", deps: "Parent-child schema definitions", status: "devdone", owner: "Tran" },
+  { id: "TASK-04", client: "Q5", title: "Deterministic Golden Record Engine", desc: "Column-level merge priorities", complexity: "high", deps: "Governance priority rules", status: "done", owner: "Tran" },
+  { id: "TASK-05", client: "Q6", title: "Complex Fallbacks & Coalescing", desc: "Timestamp-based field merging templates", complexity: "high", deps: "Fallback logic details", status: "pending", owner: "Shaheryar" },
+  { id: "TASK-06", client: "Q7", title: "Interactive Staging Dashboard UI", desc: "Steward override panel in Next.js", complexity: "medium", deps: "Override API & DB schema", status: "done", owner: "Zaryab" },
+  { id: "TASK-07", client: "Q11", title: "Draft/Approved Rule Workflows", desc: "Rules state machine in Prisma/FastAPI", complexity: "medium", deps: "None", status: "done", owner: "Shaheryar" },
+  { id: "TASK-08", client: "Q12", title: "Centralized Audit Trails", desc: "Operation audit logging in PostgreSQL", complexity: "medium", deps: "None", status: "done", owner: "Shaheryar" },
+  { id: "TASK-09", client: "Q15", title: "Pre-built ERP Connector Wrappers", desc: "SAP RFC/OData and Dynamics APIs", complexity: "high", deps: "ERP Sandbox Credentials/APIs", status: "inprogress", owner: "Zaryab" },
+  { id: "TASK-10", client: "Q16", title: "FastAPI Ingestion Adapters", desc: "Batch adapters for enterprise pipelines", complexity: "medium", deps: "API documentation", status: "done", owner: "Shaheryar" },
+  { id: "TASK-11", client: "Q17", title: "HANA/SAP Staging Writebacks", desc: "Export drivers to SAP HANA staging tables", complexity: "high", deps: "Staging table write credentials", status: "pending", owner: "Shaheryar" },
+  { id: "TASK-12", client: "Q19", title: "SAP MDG Validation Translation", desc: "Parse and map MDG rule schemas to YAML", complexity: "medium", deps: "MDG rule schema samples", status: "done", owner: "Zaryab" },
+  { id: "TASK-13", client: "Q20", title: "Orchestrated Sync Pipelines", desc: "Airflow/Prefect sync operators", complexity: "medium", deps: "Orchestrator deployment", status: "inprogress", owner: "Shaheryar" },
+  { id: "TASK-14", client: "Q22", title: "Continuous Celery Processing Queue", desc: "Redis queue integration", complexity: "high", deps: "Redis / Celery deployment", status: "done", owner: "Zaryab" },
+  { id: "TASK-15", client: "Q23", title: "Real-Time Pre-Entry Validation", desc: "Low-latency check API middleware", complexity: "medium", deps: "CRM/ERP hook configuration", status: "devdone", owner: "Shaheryar" },
+  { id: "TASK-16", client: "Q24", title: "Celery Beat Automated Monitoring", desc: "Scheduled quality checks", complexity: "medium", deps: "Staging DB connections", status: "devdone", owner: "Shaheryar" },
+  { id: "TASK-17", client: "Q25", title: "Multi-Channel Notification Alerts", desc: "Slack, MS Teams, and Email webhooks", complexity: "medium", deps: "Webhook URL configurations", status: "done", owner: "Shaheryar" },
+  { id: "TASK-18", client: "Q31", title: "Fine-Grained Role-Based Access Control", desc: "FastAPI/Prisma RBAC", complexity: "medium", deps: "Entra ID AD group maps", status: "devdone", owner: "Tran" },
+  { id: "TASK-19", client: "Q32", title: "Microsoft Entra ID SSO", desc: "OpenID Connect auth in NextAuth.js", complexity: "medium", deps: "Entra ID App registration config", status: "devdone", owner: "Tran" },
+  { id: "TASK-20", client: "Q33", title: "Encrypted Credentials Manager", desc: "AWS KMS / Azure Key Vault integration", complexity: "medium", deps: "Cloud KMS IAM permissions", status: "done", owner: "Tran" },
+  { id: "TASK-21", client: "Q36", title: "Multi-LLM LiteLLM Router Integration", desc: "Dynamic route failover", complexity: "medium", deps: "LLM API keys & configurations", status: "done", owner: "Shaheryar" },
+  { id: "TASK-22", client: "Q37", title: "Enterprise Production Helm Charts", desc: "Deployment & autoscaling (HPA)", complexity: "high", deps: "EKS/AKS access", status: "pending", owner: "Shaheryar" },
+  { id: "TASK-23", client: "-", title: "Enhancing Accuracy Results", desc: "Merge accuracy result optimization and validation metrics", complexity: "medium", deps: "None", status: "done", owner: "Zaryab" },
+  { id: "Task-24", client: "—", title: "Viewer Access Enhancements", desc: "", complexity: "medium", deps: "None", status: "devdone", owner: "Shaheryar" }
+];
+
 let state = {
-  tasks: []
+  tasks: FALLBACK_TASKS
 };
 
 let activeStatusFilter = 'all';
@@ -838,9 +865,17 @@ function parse2DArrayTasks(rows) {
 
 async function loadState(){
   renderSkeletons();
-  const liveTasks = await fetchWorksheetData();
-  if (liveTasks && liveTasks.length > 0) {
-    state.tasks = liveTasks;
+  try {
+    const liveTasks = await fetchWorksheetData();
+    if (liveTasks && liveTasks.length > 0) {
+      state.tasks = liveTasks;
+    } else if (!state.tasks || state.tasks.length === 0) {
+      state.tasks = FALLBACK_TASKS;
+    }
+  } catch (err) {
+    if (!state.tasks || state.tasks.length === 0) {
+      state.tasks = FALLBACK_TASKS;
+    }
   }
   updateClientFilterOptions();
   render();

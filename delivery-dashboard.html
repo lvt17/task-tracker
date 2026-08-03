@@ -712,7 +712,9 @@ async function fetchWorksheetData() {
   try {
     if (scriptUrl) {
       try {
-        const res = await _secureFetch(scriptUrl);
+        // Append cache-buster timestamp to prevent browser from reusing expired Google 302 redirect keys (which cause 404 errors)
+        const cacheBusterUrl = scriptUrl + (scriptUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        const res = await _secureFetch(cacheBusterUrl);
         if (res.ok) {
           const rawData = await res.json();
           if (Array.isArray(rawData) && rawData.length > 0) {

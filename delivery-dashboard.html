@@ -335,7 +335,7 @@ select option {
 .card{
   background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
   border-radius:10px; padding:14px 16px; display:grid;
-  grid-template-columns:78px 56px 1fr 100px 190px 140px;
+  grid-template-columns:74px 48px 1fr 125px 85px 140px 115px;
   gap:14px; align-items:center; transition:border-color 0.15s ease;
 }
 .card:hover{border-color:var(--border);}
@@ -353,6 +353,21 @@ select option {
 }
 .c-title-wrap .desc{
   font-size:12px; color:var(--text-mid); font-family:'Inter',sans-serif; margin-top:3px;
+}
+
+.owner-pill {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-hi);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }
 
 .pill{
@@ -379,7 +394,7 @@ select option {
 .status-pill.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.4);}
 
 .col-labels{
-  display:grid; grid-template-columns:78px 56px 1fr 100px 190px 140px; gap:14px;
+  display:grid; grid-template-columns:74px 48px 1fr 125px 85px 140px 115px; gap:14px;
   padding:0 16px; margin-bottom:6px;
 }
 .col-labels span{
@@ -557,7 +572,7 @@ select option {
   </div>
 
   <div class="col-labels">
-    <span>Task ID</span><span>Task</span><span>Title &amp; description</span><span>Complexity</span><span>Dependencies</span><span>Status</span>
+    <span>Task ID</span><span>Task</span><span>Title &amp; description</span><span>Owner</span><span>Complexity</span><span>Dependencies</span><span>Status</span>
   </div>
 
   <div id="sections"></div>
@@ -737,7 +752,7 @@ async function fetchWorksheetData() {
 
 function parse2DArrayTasks(rows) {
   let headerRowIdx = -1;
-  let colMap = { id: 0, client: 1, titleDesc: 2, complexity: 3, deps: 4, status: 5 };
+  let colMap = { id: 0, client: 1, titleDesc: 2, complexity: 3, deps: 4, status: 5, owner: 6 };
 
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
     const cellVals = (rows[i] || []).map(v => String(v || '').trim().toLowerCase());
@@ -750,6 +765,7 @@ function parse2DArrayTasks(rows) {
         else if (v.includes('complexity')) colMap.complexity = colIdx;
         else if (v.includes('depend')) colMap.deps = colIdx;
         else if (v.includes('status')) colMap.status = colIdx;
+        else if (v.includes('owner')) colMap.owner = colIdx;
       });
       break;
     }
@@ -770,6 +786,7 @@ function parse2DArrayTasks(rows) {
     const rawComplexity = getVal(colMap.complexity).toLowerCase();
     const rawDeps = getVal(colMap.deps) || 'None';
     const rawStatus = getVal(colMap.status).toLowerCase();
+    const rawOwner = getVal(colMap.owner) || '—';
 
     let title = rawTitleDesc;
     let desc = '';
@@ -809,7 +826,8 @@ function parse2DArrayTasks(rows) {
       desc: desc,
       complexity: complexity,
       deps: rawDeps,
-      status: status
+      status: status,
+      owner: rawOwner
     });
   }
 
@@ -968,6 +986,7 @@ function matchesFilter(t){
     (t.desc || '').toLowerCase().includes(q) ||
     (t.id || '').toLowerCase().includes(q) ||
     (t.client || '').toLowerCase().includes(q) ||
+    (t.owner || '').toLowerCase().includes(q) ||
     (t.deps || '').toLowerCase().includes(q)
   )) return false;
 
@@ -1095,6 +1114,7 @@ function buildCard(t){
       <h5 class="title">${escapeAttr(t.title)}</h5>
       ${t.desc ? `<p class="desc">${escapeAttr(t.desc)}</p>` : ''}
     </div>
+    <div class="c-owner"><span class="owner-pill">👤 ${escapeAttr(t.owner || '—')}</span></div>
     <div><span class="pill ${t.complexity}">${complexityDisplay}</span></div>
     <div class="c-dep">${escapeAttr(t.deps)}</div>
     <div><span class="status-pill ${t.status}">${STATUS_LABEL[t.status] || t.status}</span></div>

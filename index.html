@@ -335,7 +335,7 @@ select option {
 .card{
   background:var(--panel); border:1px solid var(--border-soft); border-left:3px solid transparent;
   border-radius:10px; padding:14px 16px; display:grid;
-  grid-template-columns:74px 48px 1fr 125px 85px 140px 115px;
+  grid-template-columns:74px 48px 1fr 125px 85px 125px 115px;
   gap:14px; align-items:center; transition:border-color 0.15s ease;
 }
 .card:hover{border-color:var(--border);}
@@ -370,6 +370,28 @@ select option {
   white-space: nowrap;
 }
 
+.c-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.timeline-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-hi);
+  white-space: nowrap;
+}
+.timeline-pill.empty {
+  color: var(--text-low);
+}
+.deviation-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--amber);
+  white-space: nowrap;
+}
+
 .pill{
   font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase;
   letter-spacing:.05em; border-radius:6px; padding:5px 8px; text-align:center; border:1px solid transparent;
@@ -394,7 +416,7 @@ select option {
 .status-pill.done{background:var(--emerald-dim);color:var(--emerald);border-color:rgba(51,196,129,.4);}
 
 .col-labels{
-  display:grid; grid-template-columns:74px 48px 1fr 125px 85px 140px 115px; gap:14px;
+  display:grid; grid-template-columns:74px 48px 1fr 125px 85px 125px 115px; gap:14px;
   padding:0 16px; margin-bottom:6px;
 }
 .col-labels span{
@@ -572,7 +594,7 @@ select option {
   </div>
 
   <div class="col-labels">
-    <span>Task ID</span><span>Task</span><span>Title &amp; description</span><span>Owner</span><span>Complexity</span><span>Dependencies</span><span>Status</span>
+    <span>Task ID</span><span>Task</span><span>Title &amp; description</span><span>Owner</span><span>Complexity</span><span>Timeline</span><span>Status</span>
   </div>
 
   <div id="sections"></div>
@@ -626,9 +648,50 @@ if (window.XMLHttpRequest) {
 // =========================================================================
 // GOOGLE WORKSHEET READ-ONLY CONFIGURATION
 // =========================================================================
-const SPREADSHEET_ID = ''; 
+const SPREADSHEET_ID = '1bRhYoLNUku4-Vc55TUH6dtPSFrwtbtlwSZdIsejEF6U'; 
 const SHEET_TAB_NAME = 'Task Tracker';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTXLt_BKakSvy5494ZFVpax9ebXTR5s23PuUFuHjHZ3Ina_jSw-ayque4k_9t03-sJ/exec';
+
+function formatDateStr(dStr) {
+  if (!dStr || dStr === '—' || dStr === 'None') return '';
+  dStr = String(dStr).trim();
+  if (!dStr) return '';
+  
+  // Handle GViz Date format: Date(2026,6,31)
+  const gvizMatch = dStr.match(/Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})\)/i);
+  if (gvizMatch) {
+    const year = parseInt(gvizMatch[1], 10);
+    const monthIdx = parseInt(gvizMatch[2], 10);
+    const day = parseInt(gvizMatch[3], 10);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (months[monthIdx]) {
+      return `${String(day).padStart(2, '0')} ${months[monthIdx]} ${year}`;
+    }
+  }
+
+  if (dStr.includes('T') || /^\d{4}-\d{2}-\d{2}/.test(dStr)) {
+    const d = new Date(dStr);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = d.toLocaleString('en-US', { month: 'short' });
+      const year = d.getFullYear();
+      return `${day} ${month} ${year}`;
+    }
+  }
+  
+  const parts = dStr.split(/[\/\.-]/);
+  if (parts.length === 3) {
+    let day = parseInt(parts[0], 10);
+    let monthIdx = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+    if (year < 100) year += 2000;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (!isNaN(day) && !isNaN(monthIdx) && months[monthIdx]) {
+      return `${String(day).padStart(2, '0')} ${months[monthIdx]} ${year}`;
+    }
+  }
+  return dStr;
+}
 
 const PAGE_SIZE = 6;
 
@@ -781,7 +844,7 @@ async function fetchWorksheetData() {
 
 function parse2DArrayTasks(rows) {
   let headerRowIdx = -1;
-  let colMap = { id: 0, client: 1, titleDesc: 2, complexity: 3, deps: 4, status: 5, owner: 6 };
+  let colMap = { id: 0, client: 1, titleDesc: 2, complexity: 3, deps: 4, status: 5, owner: 6, timeline: 7, deviation: 8, deviation2: 9 };
 
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
     const cellVals = (rows[i] || []).map(v => String(v || '').trim().toLowerCase());
@@ -795,6 +858,9 @@ function parse2DArrayTasks(rows) {
         else if (v.includes('depend')) colMap.deps = colIdx;
         else if (v.includes('status')) colMap.status = colIdx;
         else if (v.includes('owner')) colMap.owner = colIdx;
+        else if (v.includes('comitted') || v.includes('timeline') || v.includes('time-line')) colMap.timeline = colIdx;
+        else if (v.includes('2nd deviation')) colMap.deviation2 = colIdx;
+        else if (v.includes('deviation')) colMap.deviation = colIdx;
       });
       break;
     }
@@ -816,6 +882,9 @@ function parse2DArrayTasks(rows) {
     const rawDeps = getVal(colMap.deps) || 'None';
     const rawStatus = getVal(colMap.status).toLowerCase();
     const rawOwner = getVal(colMap.owner) || '—';
+    const rawTimeline = formatDateStr(getVal(colMap.timeline));
+    const rawDeviation = formatDateStr(getVal(colMap.deviation));
+    const rawDeviation2 = formatDateStr(getVal(colMap.deviation2));
 
     let title = rawTitleDesc;
     let desc = '';
@@ -856,7 +925,10 @@ function parse2DArrayTasks(rows) {
       complexity: complexity,
       deps: rawDeps,
       status: status,
-      owner: rawOwner
+      owner: rawOwner,
+      timeline: rawTimeline,
+      deviation: rawDeviation,
+      deviation2: rawDeviation2
     });
   }
 
@@ -1153,7 +1225,10 @@ function buildCard(t){
     </div>
     <div class="c-owner"><span class="owner-pill">👤 ${escapeAttr(t.owner || '—')}</span></div>
     <div><span class="pill ${t.complexity}">${complexityDisplay}</span></div>
-    <div class="c-dep">${escapeAttr(t.deps)}</div>
+    <div class="c-timeline">
+      ${t.timeline ? `<span class="timeline-pill">📅 ${t.timeline}</span>` : '<span class="timeline-pill empty">—</span>'}
+      ${t.deviation ? `<span class="deviation-pill">↳ ${t.deviation}</span>` : ''}
+    </div>
     <div><span class="status-pill ${t.status}">${STATUS_LABEL[t.status] || t.status}</span></div>
   `;
 

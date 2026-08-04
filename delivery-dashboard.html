@@ -720,14 +720,14 @@ const FALLBACK_TASKS = [
   { id: "TASK-06", client: "Q7", title: "Interactive Staging Dashboard UI", desc: "Steward override panel in Next.js", complexity: "medium", deps: "Override API & DB schema", status: "done", owner: "Zaryab" },
   { id: "TASK-07", client: "Q11", title: "Draft/Approved Rule Workflows", desc: "Rules state machine in Prisma/FastAPI", complexity: "medium", deps: "None", status: "done", owner: "Shaheryar" },
   { id: "TASK-08", client: "Q12", title: "Centralized Audit Trails", desc: "Operation audit logging in PostgreSQL", complexity: "medium", deps: "None", status: "done", owner: "Shaheryar" },
-  { id: "TASK-09", client: "Q15", title: "Pre-built ERP Connector Wrappers", desc: "SAP RFC/OData and Dynamics APIs", complexity: "high", deps: "ERP Sandbox Credentials/APIs", status: "inprogress", owner: "Zaryab" },
-  { id: "TASK-10", client: "Q16", title: "FastAPI Ingestion Adapters", desc: "Batch adapters for enterprise pipelines", complexity: "medium", deps: "API documentation", status: "done", owner: "Shaheryar" },
+  { id: "TASK-09", client: "Q15", title: "Pre-built ERP Connector Wrappers", desc: "SAP RFC/OData and Dynamics APIs", complexity: "high", deps: "ERP Sandbox Credentials/APIs", status: "inprogress", owner: "Zaryab", timeline: "03/08/26" },
+  { id: "TASK-10", client: "Q16", title: "FastAPI Ingestion Adapters", desc: "Batch adapters for enterprise pipelines", complexity: "medium", deps: "API documentation", status: "done", owner: "Shaheryar", timeline: "24/072026" },
   { id: "TASK-11", client: "Q17", title: "HANA/SAP Staging Writebacks", desc: "Export drivers to SAP HANA staging tables", complexity: "high", deps: "Staging table write credentials", status: "pending", owner: "Shaheryar" },
   { id: "TASK-12", client: "Q19", title: "SAP MDG Validation Translation", desc: "Parse and map MDG rule schemas to YAML", complexity: "medium", deps: "MDG rule schema samples", status: "done", owner: "Zaryab" },
   { id: "TASK-13", client: "Q20", title: "Orchestrated Sync Pipelines", desc: "Airflow/Prefect sync operators", complexity: "medium", deps: "Orchestrator deployment", status: "inprogress", owner: "Shaheryar" },
-  { id: "TASK-14", client: "Q22", title: "Continuous Celery Processing Queue", desc: "Redis queue integration", complexity: "high", deps: "Redis / Celery deployment", status: "done", owner: "Zaryab" },
-  { id: "TASK-15", client: "Q23", title: "Real-Time Pre-Entry Validation", desc: "Low-latency check API middleware", complexity: "medium", deps: "CRM/ERP hook configuration", status: "devdone", owner: "Shaheryar" },
-  { id: "TASK-16", client: "Q24", title: "Celery Beat Automated Monitoring", desc: "Scheduled quality checks", complexity: "medium", deps: "Staging DB connections", status: "devdone", owner: "Shaheryar" },
+  { id: "TASK-14", client: "Q22", title: "Continuous Celery Processing Queue", desc: "Redis queue integration", complexity: "high", deps: "Redis / Celery deployment", status: "done", owner: "Zaryab", timeline: "28/07/26" },
+  { id: "TASK-15", client: "Q23", title: "Real-Time Pre-Entry Validation", desc: "Low-latency check API middleware", complexity: "medium", deps: "CRM/ERP hook configuration", status: "devdone", owner: "Shaheryar", timeline: "30/07/26" },
+  { id: "TASK-16", client: "Q24", title: "Celery Beat Automated Monitoring", desc: "Scheduled quality checks", complexity: "medium", deps: "Staging DB connections", status: "devdone", owner: "Shaheryar", timeline: "27/07/26" },
   { id: "TASK-17", client: "Q25", title: "Multi-Channel Notification Alerts", desc: "Slack, MS Teams, and Email webhooks", complexity: "medium", deps: "Webhook URL configurations", status: "done", owner: "Shaheryar" },
   { id: "TASK-18", client: "Q31", title: "Fine-Grained Role-Based Access Control", desc: "FastAPI/Prisma RBAC", complexity: "medium", deps: "Entra ID AD group maps", status: "devdone", owner: "Tran" },
   { id: "TASK-19", client: "Q32", title: "Microsoft Entra ID SSO", desc: "OpenID Connect auth in NextAuth.js", complexity: "medium", deps: "Entra ID App registration config", status: "devdone", owner: "Tran" },
@@ -896,9 +896,16 @@ function parse2DArrayTasks(rows) {
     const rawDeps = getVal(colMap.deps) || 'None';
     const rawStatus = getVal(colMap.status).toLowerCase();
     const rawOwner = getVal(colMap.owner) || '—';
-    const rawTimeline = formatDateStr(getVal(colMap.timeline));
-    const rawDeviation = formatDateStr(getVal(colMap.deviation));
-    const rawDeviation2 = formatDateStr(getVal(colMap.deviation2));
+    let rawTimeline = formatDateStr(getVal(colMap.timeline));
+    let rawDeviation = formatDateStr(getVal(colMap.deviation));
+    let rawDeviation2 = formatDateStr(getVal(colMap.deviation2));
+
+    if (!rawTimeline && !rawDeviation && !rawDeviation2) {
+      const fb = FALLBACK_TASKS.find(x => x.id.toUpperCase() === rawId.toUpperCase());
+      if (fb && fb.timeline) {
+        rawTimeline = formatDateStr(fb.timeline);
+      }
+    }
 
     let title = rawTitleDesc;
     let desc = '';

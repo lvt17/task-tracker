@@ -669,6 +669,18 @@ function formatDateStr(dStr) {
     }
   }
 
+  // Handle concatenated typo format like 24/072026
+  const concatMatch = dStr.match(/^(\d{1,2})[\/\.-](\d{2})(\d{4})$/);
+  if (concatMatch) {
+    const day = parseInt(concatMatch[1], 10);
+    const monthIdx = parseInt(concatMatch[2], 10) - 1;
+    const year = parseInt(concatMatch[3], 10);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (!isNaN(day) && !isNaN(monthIdx) && months[monthIdx]) {
+      return `${String(day).padStart(2, '0')} ${months[monthIdx]} ${year}`;
+    }
+  }
+
   if (dStr.includes('T') || /^\d{4}-\d{2}-\d{2}/.test(dStr)) {
     const d = new Date(dStr);
     if (!isNaN(d.getTime())) {
@@ -1218,6 +1230,9 @@ function buildCard(t){
 
   const complexityDisplay = (t.complexity || 'medium').toUpperCase();
 
+  const primaryDate = t.timeline || t.deviation || t.deviation2;
+  const subDate = (t.timeline && t.deviation) ? t.deviation : (t.timeline && t.deviation2 ? t.deviation2 : '');
+
   card.innerHTML = `
     <div class="c-id">${t.id}</div>
     <div class="c-client">${displayClient}</div>
@@ -1228,8 +1243,8 @@ function buildCard(t){
     <div class="c-owner"><span class="owner-pill">👤 ${escapeAttr(t.owner || '—')}</span></div>
     <div><span class="pill ${t.complexity}">${complexityDisplay}</span></div>
     <div class="c-timeline">
-      ${t.timeline ? `<span class="timeline-pill">📅 ${t.timeline}</span>` : '<span class="timeline-pill empty">—</span>'}
-      ${t.deviation ? `<span class="deviation-pill">↳ ${t.deviation}</span>` : ''}
+      ${primaryDate ? `<span class="timeline-pill">📅 ${primaryDate}</span>` : '<span class="timeline-pill empty">—</span>'}
+      ${subDate ? `<span class="deviation-pill">↳ ${subDate}</span>` : ''}
     </div>
     <div><span class="status-pill ${t.status}">${STATUS_LABEL[t.status] || t.status}</span></div>
   `;

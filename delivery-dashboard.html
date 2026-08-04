@@ -800,9 +800,29 @@ async function fetchWorksheetData() {
   showLoading(true);
 
   try {
+    // 1. Try direct GViz API first if sheetId is provided (fastest, cleanest, zero console errors)
+    if (sheetId) {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&_t=${Date.now()}`;
+      try {
+        const res = await _secureFetch(url);
+        if (res.ok) {
+          const text = await res.text();
+          const jsonStr = text.replace(/^[^\({]*\(/, '').replace(/\);?\s*$/, '');
+          const data = JSON.parse(jsonStr);
+          if (data.table && data.table.rows) {
+            const rows2D = data.table.rows.map(r => (r.c || []).map(cell => cell && cell.v != null ? cell.v : ''));
+            const parsed = parse2DArrayTasks(rows2D);
+            if (parsed && parsed.length > 0) return parsed;
+          }
+        }
+      } catch (err) {
+        console.warn("GViz fetch failed, trying scriptUrl fallback:", err);
+      }
+    }
+
+    // 2. Fallback to Apps Script if GViz is unconfigured or fails
     if (scriptUrl) {
       try {
-        // Append cache-buster timestamp to prevent browser from reusing expired Google 302 redirect keys (which cause 404 errors)
         const cacheBusterUrl = scriptUrl + (scriptUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
         const res = await _secureFetch(cacheBusterUrl);
         if (res.ok) {
@@ -813,25 +833,7 @@ async function fetchWorksheetData() {
           }
         }
       } catch (e) {
-        console.warn("Apps Script fetch failed, attempting GViz fallback:", e);
-      }
-    }
-
-    if (sheetId) {
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
-      try {
-        const res = await _secureFetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        const jsonStr = text.replace(/^[^\({]*\(/, '').replace(/\);?\s*$/, '');
-        const data = JSON.parse(jsonStr);
-        if (data.table && data.table.rows) {
-          const rows2D = data.table.rows.map(r => (r.c || []).map(cell => cell && cell.v != null ? cell.v : ''));
-          const parsed = parse2DArrayTasks(rows2D);
-          if (parsed && parsed.length > 0) return parsed;
-        }
-      } catch (err) {
-        console.warn("GViz fallback failed:", err);
+        console.warn("Apps Script fetch failed:", e);
       }
     }
   } finally {
